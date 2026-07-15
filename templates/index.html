@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Sentiment AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🗳️ Election Sentiment & Probability AI</h1>
+        <p>Real-time analysis of political discourse using NLP</p>
+    </header>
+
+    <section class="map-card">
+        <h2>Nepal District Map</h2>
+        <iframe src="{{ url_for('static', filename='nepal_map_default.html') }}" title="Nepal District Map" class="map-frame"></iframe>
+    </section>
+
+    <section class="controls">
+        <div class="input-group">
+            <label>Select Candidate</label>
+            <select id="candidateName">
+                <option value="Balen">Balen Shah (RSP Alliance)</option>
+                <option value="KP Oli">KP Oli (CPN-UML)</option>
+                <option value="Gagan Thapa">Gagan Thapa (NC)</option>
+                <option value="Prachanda">Prachanda (Maoist)</option>
+                <option value="Harka Sampang">Harka Sampang</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Data Source</label>
+            <select id="dataSource">
+                <option value="youtube">YouTube Comments</option>
+            </select>
+        </div>
+        
+        <button onclick="runAnalysis()" id="analyzeBtn">Run Analysis</button>
+    </section>
+
+    <div id="loading" class="hidden">Connecting to YouTube API and analyzing 1,000+ comments...</div>
+
+    <main id="dashboard" class="hidden">
+        
+        <div class="win-meter-container">
+            <h2>Estimated Win Probability</h2>
+            <div class="meter-bg">
+                <div id="meterFill" class="meter-fill">0%</div>
+            </div>
+           
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Sentiment Distribution</h3>
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+
+        <div class="data-preview">
+            <h3>Recent Mention Analysis</h3>
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Text Snippet</th>
+                        <th>Sentiment</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
