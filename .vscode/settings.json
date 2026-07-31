@@ -1,0 +1,31 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+  "python.terminal.activateEnvironment": true,
+  "python.analysis.extraPaths": ["${workspaceFolder}"],
+  "python.envFile": "${workspaceFolder}/.env",
+
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  "[python]": {
+    "editor.rulers": [79],
+    "editor.tabSize": 4
+  },
+
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/*.pyc": true
+  },
+  "search.exclude": {
+    "**/.venv": true,
+    "**/models": true,
+    "**/static/nepal_map_*.html": true,
+    "**/Nep_district.geojson": true
+  },
+  "files.watcherExclude": {
+    "**/.venv/**": true,
+    "**/static/nepal_map_*.html": true
+  }
+}

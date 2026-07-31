@@ -1,16 +1,21 @@
 # app.py
 
 from flask import Flask, render_template, request, jsonify
-from sentiment_model import ElectionAnalyzer
-import mimetypes # <-- ADD THIS LINE
 
-app = Flask(__name__, static_folder='static', template_folder='templates')
-mimetypes.add_type('text/css', '.css')
+from sentiment_model import ElectionAnalyzer
+
+
+
+app = Flask(__name__)
 
 analyzer = ElectionAnalyzer()
 
+
+
 @app.route('/')
+
 def index():
+
     return render_template('index.html')
 
 
@@ -27,7 +32,7 @@ def analyze():
 
         source = data.get('source')
 
-       
+
 
         if not candidate:
 

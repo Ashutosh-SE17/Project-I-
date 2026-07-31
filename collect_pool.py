@@ -1,0 +1,172 @@
+"""
+collect_pool.py
+---------------
+Builds the single de-duplicated pool that label_tool.py draws from.
+
+    # merge what you already have
+    python collect_pool.py
+
+    # merge, then top up from YouTube across all five candidates
+    python collect_pool.py --fetch --per-candidate 300
+
+Output: labelling_pool.csv  (columns: text, candidate, script, source)
+
+Why a separate step: your comments currently live in two files with two
+different shapes, one of them holding a single candidate. Labelling from
+one merged, script-balanced pool is what stops the classifier from
+learning "this is a KP Oli video, therefore negative" instead of learning
+sentiment.
+"""
+
+import argparse
+import json
+import os
+from pathlib import Path
+
+import pandas as pd
+
+import preprocessing as pp
+
+BASE = Path(__file__).resolve().parent
+
+
+def from_csv(path: Path) -> pd.DataFrame:
+    if not path.exists():
+        return pd.DataFrame()
+    df = pd.read_csv(path)
+    text_col = 'text' if 'text' in df.columns else df.columns[0]
+    out = pd.DataFrame({'text': df[text_col].astype(str)})
+    out['candidate'] = df['candidate'] if 'candidate' in df.columns else 'unknown'
+    out['source'] = path.name
+    out['channel'] = 'comment'
+    return out
+
+
+def from_cache(path: Path) -> pd.DataFrame:
+    if not path.exists():
+        return pd.DataFrame()
+    try:
+        cache = json.loads(path.read_text(encoding='utf-8'))
+    except Exception:
+        return pd.DataFrame()
+
+    rows = []
+    for key, entry in cache.items():
+        items = entry.get('comments', []) if isinstance(entry, dict) else entry
+        for it in items:
+            text = it.get('text') if isinstance(it, dict) else it
+            if text:
+                rows.append({'text': str(text), 'candidate': key,
+                             'source': path.name, 'channel': 'comment'})
+    return pd.DataFrame(rows)
+
+
+def fetch_fresh(per_candidate: int) -> pd.DataFrame:
+    """Top up the pool with new comments across every registered candidate."""
+    import entities as ent
+    from sentiment_model import ElectionAnalyzer
+
+    if not os.environ.get('YOUTUBE_API_KEY'):
+        print('  YOUTUBE_API_KEY not set -- skipping fetch')
+        return pd.DataFrame()
+
+    analyzer = ElectionAnalyzer()
+    frames = []
+    for key, cfg in ent.CANDIDATES.items():
+        print(f'  fetching {cfg["display"]}...', end=' ', flush=True)
+        try:
+            df = analyzer.fetch_comments(cfg['search'], max_videos=5,
+                                         per_video=100)
+            df = df.head(per_candidate)
+            df['candidate'] = key
+            df['source'] = 'youtube'
+            df['channel'] = 'comment'
+            frames.append(df[['text', 'candidate', 'source', 'channel']])
+            print(f'{len(df)}')
+        except Exception as exc:
+            print(f'failed ({type(exc).__name__})')
+    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+
+def fetch_news() -> pd.DataFrame:
+    """Build a HEADLINE pool. These need their own labels -- a headline is
+    a different register from a comment and the model must see both."""
+    import entities as ent
+    from news_source import NewsCollector
+
+    nc = NewsCollector(verbose=False)
+    frames = []
+    for key, cfg in ent.CANDIDATES.items():
+        print(f'  headlines for {cfg["display"]}...', end=' ', flush=True)
+        try:
+            d = nc.collect(key)
+            if d.empty:
+                print('0')
+                continue
+            d['candidate'] = key
+            d['source'] = 'rss'
+            d['channel'] = 'news'
+            frames.append(d[['text', 'candidate', 'source', 'channel']])
+            print(f'{len(d)}')
+        except Exception as exc:
+            print(f'failed ({type(exc).__name__})')
+    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--out', default='labelling_pool.csv')
+    ap.add_argument('--fetch', action='store_true',
+                    help='top up comments from YouTube')
+    ap.add_argument('--news', action='store_true',
+                    help='also build a headline pool (labelled separately '
+                         'as channel=news)')
+    ap.add_argument('--per-candidate', type=int, default=300)
+    ap.add_argument('--min-chars', type=int, default=8)
+    args = ap.parse_args()
+
+    parts = [
+        from_csv(BASE / 'election_data.csv'),
+        from_cache(BASE / 'cache.json'),
+    ]
+    if args.fetch:
+        parts.append(fetch_fresh(args.per_candidate))
+    if args.news:
+        parts.append(fetch_news())
+
+    parts = [p for p in parts if not p.empty]
+    if not parts:
+        raise SystemExit('No input data found.')
+
+    df = pd.concat(parts, ignore_index=True)
+    before = len(df)
+
+    df['text'] = df['text'].astype(str).str.strip()
+    df = df[df['text'].str.len() >= args.min_chars]
+
+    # de-duplicate on NORMALISED text, so "KP Oli chor!!!" and
+    # "kp oli chor" are not labelled twice
+    df['_norm'] = df['text'].apply(pp.clean)
+    df = df[df['_norm'].str.strip().astype(bool)]
+    df = df.drop_duplicates(subset=['_norm']).drop(columns=['_norm'])
+
+    df['script'] = df['text'].apply(pp.script_of)
+    df = df.reset_index(drop=True)
+
+    df.to_csv(args.out, index=False)
+
+    print(f'\n{before} raw -> {len(df)} unique comments -> {args.out}\n')
+    print('by candidate:')
+    print(df['candidate'].value_counts().to_string())
+    print('\nby script:')
+    print(df['script'].value_counts().to_string())
+    print('\nby channel:')
+    print(df['channel'].value_counts().to_string())
+
+    if len(df) < 1500:
+        print(f'\n  Pool is {len(df)}. Run with --fetch to top up before '
+              f'labelling, or label what you have and add more later.')
+
+
+if __name__ == '__main__':
+    main()

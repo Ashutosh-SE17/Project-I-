@@ -1,0 +1,36 @@
+# --- secrets: the whole point of this file ---
+.env
+*.key
+
+# --- python ---
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# --- trained artefacts (regenerate with: python manage.py train) ---
+models/
+*.pkl
+
+# --- generated maps: ~15 MB each, regenerate with: python manage.py maps ---
+static/nepal_map_*.html
+
+# --- caches ---
+cache.json
+
+# --- editor / OS ---
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/tasks.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# --- NOT ignored, commit these ---
+# labelled.csv        <- your labels are the most valuable thing here
+# labelling_pool.csv  <- optional, regenerable

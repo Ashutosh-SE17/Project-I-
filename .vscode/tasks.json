@@ -1,0 +1,104 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1. Doctor (check setup)",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["manage.py", "doctor"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "group": "test"
+    },
+    {
+      "label": "2. Build labelling pool",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["manage.py", "pool"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "2b. Build pool + headlines",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["manage.py", "pool", "--news"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "3. Label comments",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["manage.py", "label", "--n", "${input:batchSize}"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "3b. Label (hardest first)",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["manage.py", "label", "--n", "${input:batchSize}", "--uncertain"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "4. Train model",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["manage.py", "train"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "5. Run web app",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["manage.py", "serve"],
+      "problemMatcher": [],
+      "isBackground": true,
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "Audit my labels",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["manage.py", "audit", "--n", "100"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "Regenerate maps",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["manage.py", "maps"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "Analyze one candidate",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["manage.py", "analyze", "--candidate", "${input:candidate}"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "batchSize",
+      "type": "pickString",
+      "description": "How many comments this session?",
+      "options": ["100", "200", "300", "400", "500"],
+      "default": "300"
+    },
+    {
+      "id": "candidate",
+      "type": "pickString",
+      "description": "Which candidate?",
+      "options": ["balen", "kp oli", "gagan thapa", "prachanda", "harka sampang"],
+      "default": "balen"
+    }
+  ]
+}
