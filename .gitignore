@@ -34,3 +34,6 @@ Thumbs.db
 # --- NOT ignored, commit these ---
 # labelled.csv        <- your labels are the most valuable thing here
 # labelling_pool.csv  <- optional, regenerable
+
+# archives
+*.zip

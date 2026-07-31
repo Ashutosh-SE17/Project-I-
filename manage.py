@@ -69,12 +69,21 @@ def doctor(_extra) -> int:
         load_dotenv()
     except ImportError:
         pass
-    key = os.environ.get('YOUTUBE_API_KEY')
-    if key:
-        print(f'  {OK} YOUTUBE_API_KEY set ({key[:6]}...{key[-4:]})')
-    else:
+    key = os.environ.get('YOUTUBE_API_KEY', '').strip()
+    placeholder = ('paste_your' in key.lower() or 'your_key' in key.lower()
+                   or key.lower().startswith('paste'))
+    if not key:
         print(f'  {BAD} YOUTUBE_API_KEY not set -- create a .env file')
         problems += 1
+    elif placeholder:
+        print(f'  {BAD} YOUTUBE_API_KEY is still the placeholder '
+              f'-- put your real key in .env')
+        problems += 1
+    elif not key.startswith('AIza') or len(key) < 30:
+        print(f'  {WARN} YOUTUBE_API_KEY set but does not look like a Google '
+              f'API key ({key[:6]}...)')
+    else:
+        print(f'  {OK} YOUTUBE_API_KEY set ({key[:6]}...{key[-4:]})')
 
     for label, path in [('district geojson', ROOT / 'Nep_district.geojson'),
                         ('labelling pool', POOL),
