@@ -163,6 +163,16 @@ the payload, the attack is setup.
 
 > `केपी चोरभन्दा त प्रचण्ड हजार गुणा best!!` → **positive**, not negative.
 
+> Clarification: this only applies when the praise is **explicitly
+> stated**. Mocking someone's opponents is not by itself an endorsement,
+> and slogans like `जय जेनजि` or `जय ग्रेटर नेपाल` don't count as praise
+> of a candidate. If there's no actual praise of a person in the text,
+> it's negative.
+>
+> `🇳🇵🙏Genz आन्दोलन र सुनसरी घटना एउटै हो भन्ने, एउटै देख्नेको चै
+> मानसिक स्थीतीको check गराए हुन्छ।` → **negative**, because it only
+> mocks — the defence of GenZ is implied, not stated.
+
 **Rule 2 — Sarcasm is judged on intent, not surface words.** Markers:
 `फन्टुस`, exaggerated praise following criticism, 🤣 after mockery.
 
@@ -182,6 +192,13 @@ negative — they're not attacks.
 
 **Also:** a long propaganda-style list (many grievance bullet points) is
 labelled by its **dominant sentiment**, not automatically `negative`.
+
+**Rule 5 — If a comment is too garbled or misspelt to understand
+confidently, press `x` to skip.** A guessed label teaches the model
+noise.
+
+> `सार्वभौमसत्ता राष्ट-राष्ट्रियतामा भनेरअ लेखिदीएकाेभयए...` →
+> unparseable, skip it.
 
 ---
 
