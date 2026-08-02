@@ -151,6 +151,40 @@ are any good?" question before it's asked.
 
 ---
 
+## Agreed rules (v2 — after kappa 0.558 review)
+
+An audit against a second labeller came back at kappa 0.558 — below the
+0.65 floor. We went through every disagreement together and agreed on the
+following four rules. These override the general edge-case guidance above
+where they conflict.
+
+**Rule 1 — Mixed attack + praise → label the PRAISE.** The endorsement is
+the payload, the attack is setup.
+
+> `केपी चोरभन्दा त प्रचण्ड हजार गुणा best!!` → **positive**, not negative.
+
+**Rule 2 — Sarcasm is judged on intent, not surface words.** Markers:
+`फन्टुस`, exaggerated praise following criticism, 🤣 after mockery.
+
+> `फन्टुस तर्क नगरौ न हो! यत्रो powerful PM भएको मान्छे!` → **negative**,
+> despite "powerful PM".
+
+**Rule 3 — Rejection of a party or symbol is NEGATIVE**, even when mildly
+phrased.
+
+> `यो बेलुन घण्टी मा आय बाट मलाई rsp मा पर्दैन` → **negative**.
+
+**Rule 4 — Aspirational calls for better governance are POSITIVE**, not
+negative — they're not attacks.
+
+> `गृहमन्त्री ले नैतिकता देखाएर राजीनामा दिएर परिपक्व गृहमन्त्री बनाउ` →
+> **positive**.
+
+**Also:** a long propaganda-style list (many grievance bullet points) is
+labelled by its **dominant sentiment**, not automatically `negative`.
+
+---
+
 ## The loop
 
 ```bash
