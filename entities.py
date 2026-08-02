@@ -36,10 +36,13 @@ CANDIDATES = {
         'search': 'Balen Shah',
         'aliases': ['balen', 'balendra', 'बालेन', 'बालेन्द्र', 'balen shah',
                     'valen', 'baalen'],
-        'symbols': ['🔔', 'ghanti', 'घण्टी', 'jay ghanti', 'rsp', 'रास्वपा',
-                    'raswapa'],
+        # NOTE: Balen joined RSP in Dec 2025, so the bell / RSP terms are
+        # now SHARED with Rabi Lamichhane and no longer identify him alone.
+        # They live in SHARED_PARTY_TERMS below instead.
+        'symbols': ['balen mayor', 'mayor balen', 'नगर प्रमुख'],
         'scandals': ['vendor force', 'fatuwari', 'garbage', 'फोहोर',
                      'dharahara', 'bulldozer'],
+        'party': 'rsp',
     },
     'kp oli': {
         'display': 'KP Oli',
@@ -50,6 +53,7 @@ CANDIDATES = {
                     'surya'],
         'scandals': ['lalita niwas', 'ललिता निवास', 'giribandhu', 'omni',
                      'yeti world', '70 crore', 'baluwatar'],
+        'party': 'uml',
     },
     'gagan thapa': {
         'display': 'Gagan Thapa',
@@ -57,6 +61,7 @@ CANDIDATES = {
         'aliases': ['gagan', 'gagan thapa', 'गगन', 'गगन थापा', 'gagan dai'],
         'symbols': ['🌳', 'nc', 'congress', 'कांग्रेस', 'rukh', 'रुख'],
         'scandals': ['bakhra', 'बाख्रा', 'anudan', 'mcc'],
+        'party': 'nc',
     },
     'prachanda': {
         'display': 'Prachanda',
@@ -65,6 +70,7 @@ CANDIDATES = {
                     'pk dahal', 'prachand'],
         'symbols': ['🔨', 'maoist', 'माओवादी', 'hathoda', 'हथौडा'],
         'scandals': ['cantonment', 'shibir', 'शिविर', 'ncell', 'lda'],
+        'party': 'maoist',
     },
     'harka sampang': {
         'display': 'Harka Sampang',
@@ -73,8 +79,47 @@ CANDIDATES = {
                     'harka raii', 'harka rai'],
         'symbols': ['💧', 'water', 'pani', 'पानी'],
         'scandals': ['pastor', 'gai haney', 'kaku', 'काकु'],
+        'party': 'independent',
+    },
+    'rabi lamichhane': {
+        'display': 'Rabi Lamichhane',
+        'search': 'Rabi Lamichhane',
+        'aliases': ['rabi lamichhane', 'ravi lamichhane', 'lamichhane',
+                    'रवि लामिछाने', 'रबि लामिछाने', 'लामिछाने',
+                    'rabi sir', 'ravi sir', 'rabi dai'],
+        # 'rabi' alone is a common given name, so it is deliberately NOT an
+        # alias -- it would fire on unrelated people.
+        'symbols': ['galaxy 4k', 'sidha kura', 'सिधा कुरा',
+                    'sidha kura janata sanga'],
+        'scandals': ['cooperative', 'सहकारी', 'sahakari', 'swarnalaxmi',
+                     'स्वर्णलक्ष्मी', 'sano paila', 'gb rai', 'गोर्खा मिडिया',
+                     'gorkha media', 'citizenship', 'नागरिकता', 'passport',
+                     'राहदानी'],
+        'party': 'rsp',
     },
 }
+
+# --------------------------------------------------------------------------
+# Party-level terms
+#
+# These identify a PARTY, not a person. Since Balen joined RSP in December
+# 2025, the bell symbol and 'rsp' are shared between Balen and Rabi, so
+# they can no longer disambiguate the two. Treating them as a personal
+# symbol for either one would misattribute every RSP comment.
+#
+# A party term counts as a WEAK signal for any candidate in that party --
+# it narrows the field without naming an individual.
+# --------------------------------------------------------------------------
+
+SHARED_PARTY_TERMS = {
+    'rsp': ['🔔', 'ghanti', 'घण्टी', 'jay ghanti', 'rsp', 'रास्वपा',
+            'raswapa', 'rastriya swatantra', 'राष्ट्रिय स्वतन्त्र'],
+    'uml': ['☀️', '🌞', 'uml', 'एमाले', 'emale', 'surya', 'सूर्य'],
+    'nc': ['🌳', 'nc', 'congress', 'कांग्रेस', 'rukh', 'रुख'],
+    'maoist': ['🔨', 'maoist', 'माओवादी', 'hathoda', 'हथौडा'],
+}
+
+PARTY_HIT_WEIGHT = 0.4   # a party mention is weaker evidence than a name
 
 # --------------------------------------------------------------------------
 # Tunable weights -- every one of these belongs in your report as a
@@ -143,9 +188,9 @@ def attribution(text: str, candidate: str) -> dict:
 
     own_cfg = CANDIDATES.get(key)
     own_terms = (own_cfg['aliases'] + own_cfg['symbols']) if own_cfg else [key]
-    own_hits = _count_hits(t, own_terms)
+    own_hits = float(_count_hits(t, own_terms))
 
-    rival_hits = 0
+    rival_hits = 0.0
     rival_scandal_hit = False
     for rkey, rcfg in CANDIDATES.items():
         if rkey == key:
@@ -154,11 +199,31 @@ def attribution(text: str, candidate: str) -> dict:
         if not rival_scandal_hit and _count_hits(t, rcfg['scandals']):
             rival_scandal_hit = True
 
+    # --- party-level terms: weak evidence, and only when no individual
+    #     from that party has already been named ---
+    own_party = own_cfg.get('party') if own_cfg else None
+    for party, terms in SHARED_PARTY_TERMS.items():
+        if not _count_hits(t, terms):
+            continue
+        members = [k for k, c in CANDIDATES.items() if c.get('party') == party]
+        named = any(_count_hits(t, CANDIDATES[m]['aliases']) for m in members)
+        if named:
+            continue        # an individual was named; the party tag adds nothing
+        if party == own_party:
+            # ambiguous between our candidate and their party colleagues,
+            # so the evidence is divided among them
+            own_hits += PARTY_HIT_WEIGHT / max(1, len(members))
+        else:
+            rival_hits += PARTY_HIT_WEIGHT
+
     # --- attribution ---
+    # Fractional hits mean the evidence was party-level only, which is
+    # ambiguous between party colleagues. Confidence is capped accordingly
+    # rather than treated as a positive identification.
     if own_hits and not rival_hits:
-        attr = 1.0
+        attr = 1.0 if own_hits >= 1.0 else min(1.0, own_hits + CONTEXT_PRIOR * (1 - own_hits))
     elif rival_hits and not own_hits:
-        attr = -1.0
+        attr = -1.0 if rival_hits >= 1.0 else -min(1.0, rival_hits + 0.2)
     elif own_hits and rival_hits:
         # both named: lean toward whoever dominates, but heavily damped
         attr = AMBIGUOUS_DAMP * (own_hits - rival_hits) / (own_hits + rival_hits)

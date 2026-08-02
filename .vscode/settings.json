@@ -27,5 +27,9 @@
   "files.watcherExclude": {
     "**/.venv/**": true,
     "**/static/nepal_map_*.html": true
-  }
+  },
+
+  "terminal.integrated.fontFamily": "'Cascadia Mono', 'Nirmala UI', Consolas, monospace",
+  "terminal.integrated.fontSize": 16,
+  "terminal.integrated.lineHeight": 1.3
 }
