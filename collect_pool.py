@@ -61,8 +61,58 @@ def from_cache(path: Path) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def fetch_fresh(per_candidate: int) -> pd.DataFrame:
-    """Top up the pool with new comments across every registered candidate."""
+# --------------------------------------------------------------------------
+# Extra search phrasings per candidate, on top of entities.CANDIDATES[key]
+# ['search']. Broadens coverage beyond just-the-name videos: interviews and
+# speeches skew more formal/scripted than reaction videos, and the
+# Devanagari-spelling query surfaces videos the romanized search misses
+# entirely.
+# --------------------------------------------------------------------------
+
+EXTRA_QUERIES = {
+    'balen': [
+        'Balen Shah interview',
+        'बालेन शाह',
+        'Balen Shah RSP',
+        'Balen Shah bhasan',
+    ],
+    'kp oli': [
+        'KP Oli interview',
+        'केपी ओली',
+        'KP Oli UML',
+        'KP Oli bhasan',
+    ],
+    'gagan thapa': [
+        'Gagan Thapa interview',
+        'गगन थापा',
+        'Gagan Thapa Congress',
+        'Gagan Thapa bhasan',
+    ],
+    'prachanda': [
+        'Prachanda interview',
+        'प्रचण्ड',
+        'Prachanda Maoist Centre',
+        'Prachanda bhasan',
+    ],
+    'harka sampang': [
+        'Harka Sampang interview',
+        'हर्क सम्पाङ',
+        'Harka Sampang Dharan mayor',
+        'Harka Sampang bhasan',
+    ],
+    'rabi lamichhane': [
+        'Rabi Lamichhane interview',
+        'रवि लामिछाने',
+        'Rabi Lamichhane RSP',
+        'Rabi Lamichhane bhasan',
+    ],
+}
+
+
+def fetch_fresh(per_candidate: int, only: str = None) -> pd.DataFrame:
+    """Top up the pool with new comments across every registered candidate,
+    querying several phrasings per candidate (name, interview, Devanagari
+    spelling, party context, speech) for broader coverage."""
     import entities as ent
     from sentiment_model import ElectionAnalyzer
 
@@ -71,20 +121,35 @@ def fetch_fresh(per_candidate: int) -> pd.DataFrame:
         return pd.DataFrame()
 
     analyzer = ElectionAnalyzer()
+
+    candidates = ent.CANDIDATES
+    if only:
+        key = ent.resolve(only)
+        if key not in candidates:
+            print(f'  unknown candidate: {only!r} -- skipping fetch')
+            return pd.DataFrame()
+        candidates = {key: candidates[key]}
+
     frames = []
-    for key, cfg in ent.CANDIDATES.items():
-        print(f'  fetching {cfg["display"]}...', end=' ', flush=True)
-        try:
-            df = analyzer.fetch_comments(cfg['search'], max_videos=5,
-                                         per_video=100)
-            df = df.head(per_candidate)
-            df['candidate'] = key
-            df['source'] = 'youtube'
-            df['channel'] = 'comment'
-            frames.append(df[['text', 'candidate', 'source', 'channel']])
-            print(f'{len(df)}')
-        except Exception as exc:
-            print(f'failed ({type(exc).__name__})')
+    for key, cfg in candidates.items():
+        queries = [cfg['search']] + EXTRA_QUERIES.get(key, [])
+        print(f'  fetching {cfg["display"]}...')
+        for q in queries:
+            try:
+                df = analyzer.fetch_comments(
+                    q, max_videos=4, max_comments=per_candidate // len(queries))
+                df['candidate'] = key
+                df['source'] = f'yt:{q}'
+                df['channel'] = 'comment'
+                frames.append(df[['text', 'candidate', 'source', 'channel']])
+                print(f'    {q!r}: {len(df)}')
+            except Exception as exc:
+                if 'quota' in str(exc).lower():
+                    collected = sum(len(f) for f in frames)
+                    print(f'  quota exhausted -- stopping fetch, returning '
+                          f'{collected} comments collected so far')
+                    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+                print(f'    {q!r}: failed ({type(exc).__name__})')
     return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
 
 
@@ -121,8 +186,10 @@ def main():
     ap.add_argument('--news', action='store_true',
                     help='also build a headline pool (labelled separately '
                          'as channel=news)')
-    ap.add_argument('--per-candidate', type=int, default=300)
+    ap.add_argument('--per-candidate', type=int, default=1000)
     ap.add_argument('--min-chars', type=int, default=8)
+    ap.add_argument('--only', default=None,
+                    help='fetch just this one candidate (e.g. --only balen)')
     args = ap.parse_args()
 
     parts = [
@@ -130,7 +197,7 @@ def main():
         from_cache(BASE / 'cache.json'),
     ]
     if args.fetch:
-        parts.append(fetch_fresh(args.per_candidate))
+        parts.append(fetch_fresh(args.per_candidate, args.only))
     if args.news:
         parts.append(fetch_news())
 
@@ -140,6 +207,10 @@ def main():
 
     df = pd.concat(parts, ignore_index=True)
     before = len(df)
+
+    import entities as ent
+    df['candidate'] = df['candidate'].apply(
+        lambda c: ent.resolve(c) if str(c) != 'unknown' else 'unknown')
 
     df['text'] = df['text'].astype(str).str.strip()
     df = df[df['text'].str.len() >= args.min_chars]
