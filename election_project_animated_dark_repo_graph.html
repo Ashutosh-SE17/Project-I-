@@ -1,0 +1,161 @@
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Animated dark force-directed graph of the election sentiment project codebase, 34 nodes across 6 communities, drifting continuously.</h2>
+
+<div style="background:#0d0d0f;border-radius:12px;padding:14px;">
+  <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;font-size:11px;color:#8b8a93;" id="legend"></div>
+  <div style="display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:10px;align-items:start;">
+    <div id="graph" style="background:#0d0d0f;border-radius:8px;overflow:hidden;"></div>
+    <div style="background:#16161a;border-radius:8px;padding:11px;min-height:190px;">
+      <div style="font-size:11px;color:#6e6d76;" id="pmeta">Click a node to inspect</div>
+      <div style="font-size:14px;font-weight:500;margin:5px 0 4px;color:#eceaf2;" id="pname"></div>
+      <div style="font-size:11px;color:#a5a3ad;line-height:1.6;" id="pdesc"></div>
+      <div style="font-size:11px;color:#6e6d76;margin-top:9px;" id="pconn"></div>
+    </div>
+  </div>
+  <div style="font-size:11px;color:#6e6d76;margin-top:8px;" id="stats"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+const C = {
+  pipeline:{c:'#4d9bf0',n:'Pipeline'}, entity:{c:'#ff7a45',n:'Entity layer'},
+  training:{c:'#25d19a',n:'Training'}, data:{c:'#f5bb2b',n:'Data'},
+  web:{c:'#9b8cf5',n:'Web app'}, docs:{c:'#f486ae',n:'Docs'}
+};
+const N = [
+ {id:'manage.py',g:'pipeline',s:16,d:'CLI entry point. Dispatches doctor, pool, label, train, serve.'},
+ {id:'sentiment_model.py',g:'pipeline',s:19,d:'ElectionAnalyzer. Fetch, score, aggregate to win probability.'},
+ {id:'preprocessing.py',g:'pipeline',s:15,d:'Script-aware cleaning. Keeps Devanagari, marks negation.'},
+ {id:'clean()',g:'pipeline',s:9,d:'Normalises text. Emoji tokenised, word order preserved.'},
+ {id:'script_of()',g:'pipeline',s:7,d:'Returns deva, latin or mixed.'},
+ {id:'polarity()',g:'pipeline',s:9,d:'P(pos) minus P(neg). Replaces the old lexicon.'},
+ {id:'score_frame()',g:'pipeline',s:10,d:'polarity x attribution + scandal term.'},
+ {id:'win_probability()',g:'pipeline',s:11,d:'Mean then sigmoid. Bootstrap confidence interval.'},
+ {id:'fetch_comments()',g:'pipeline',s:9,d:'Round-robin pagination, up to 1000 comments.'},
+ {id:'entities.py',g:'entity',s:16,d:'Candidate registry and attribution logic.'},
+ {id:'attribution()',g:'entity',s:11,d:'Who is this comment about? Range -1 to +1.'},
+ {id:'resolve()',g:'entity',s:7,d:'Maps any alias to a registry key.'},
+ {id:'balen',g:'entity',s:8,d:'Balen Shah. Joined RSP December 2025.'},
+ {id:'kp oli',g:'entity',s:8,d:'KP Oli. UML. 1,635 comments in pool.'},
+ {id:'gagan thapa',g:'entity',s:7,d:'Gagan Thapa. Nepali Congress.'},
+ {id:'prachanda',g:'entity',s:7,d:'Prachanda. Maoist Centre.'},
+ {id:'harka sampang',g:'entity',s:7,d:'Harka Sampang. Independent, Dharan.'},
+ {id:'rabi lamichhane',g:'entity',s:7,d:'Rabi Lamichhane. RSP chair.'},
+ {id:'SHARED_PARTY_TERMS',g:'entity',s:8,d:'Bell shared by Balen and Rabi. Weak evidence only.'},
+ {id:'train_sentiment.py',g:'training',s:16,d:'Trains and evaluates. Reports per-script macro-F1.'},
+ {id:'build_model()',g:'training',s:10,d:'TF-IDF word + char_wb union, LogisticRegression.'},
+ {id:'char_wb 2-5',g:'training',s:9,d:'Character n-grams. Closed the Devanagari gap.'},
+ {id:'evaluate()',g:'training',s:9,d:'5-fold CV, macro-F1, per-script breakdown.'},
+ {id:'sentiment_clf.pkl',g:'training',s:11,d:'Binary model. macro-F1 0.814.'},
+ {id:'label_tool.py',g:'data',s:14,d:'Terminal annotation. Active learning mode.'},
+ {id:'merge_labels.py',g:'data',s:12,d:'Merges annotators, reports Cohen kappa.'},
+ {id:'collect_pool.py',g:'data',s:12,d:'Builds the pool. Multi-query per candidate.'},
+ {id:'labelling_pool.csv',g:'data',s:13,d:'5,275 unique comments across six candidates.'},
+ {id:'labelled.csv',g:'data',s:13,d:'969 labels. Inter-annotator kappa 0.943.'},
+ {id:'news_source.py',g:'data',s:10,d:'RSS and Google News. Not yet enabled.'},
+ {id:'app.py',g:'web',s:12,d:'Flask server. Serves the dashboard.'},
+ {id:'script.js',g:'web',s:10,d:'Renders win meter, chart, comment table.'},
+ {id:'nepal map',g:'web',s:9,d:'Folium district map, 77 districts.'},
+ {id:'LABELLING_GUIDE',g:'docs',s:9,d:'Annotation rules v2. Rules 1 through 7.'}
+];
+const L = [
+ ['manage.py','sentiment_model.py'],['manage.py','train_sentiment.py'],['manage.py','label_tool.py'],
+ ['manage.py','collect_pool.py'],['manage.py','app.py'],
+ ['sentiment_model.py','preprocessing.py'],['sentiment_model.py','entities.py'],
+ ['sentiment_model.py','polarity()'],['sentiment_model.py','score_frame()'],
+ ['sentiment_model.py','win_probability()'],['sentiment_model.py','fetch_comments()'],
+ ['sentiment_model.py','sentiment_clf.pkl'],['sentiment_model.py','news_source.py'],
+ ['preprocessing.py','clean()'],['preprocessing.py','script_of()'],
+ ['score_frame()','polarity()'],['score_frame()','attribution()'],
+ ['win_probability()','score_frame()'],['polarity()','clean()'],
+ ['entities.py','attribution()'],['entities.py','resolve()'],['entities.py','SHARED_PARTY_TERMS'],
+ ['entities.py','balen'],['entities.py','kp oli'],['entities.py','gagan thapa'],
+ ['entities.py','prachanda'],['entities.py','harka sampang'],['entities.py','rabi lamichhane'],
+ ['SHARED_PARTY_TERMS','balen'],['SHARED_PARTY_TERMS','rabi lamichhane'],
+ ['train_sentiment.py','build_model()'],['train_sentiment.py','evaluate()'],
+ ['train_sentiment.py','preprocessing.py'],['train_sentiment.py','labelled.csv'],
+ ['build_model()','char_wb 2-5'],['build_model()','sentiment_clf.pkl'],
+ ['evaluate()','script_of()'],
+ ['label_tool.py','labelling_pool.csv'],['label_tool.py','preprocessing.py'],
+ ['label_tool.py','LABELLING_GUIDE'],['label_tool.py','sentiment_clf.pkl'],
+ ['merge_labels.py','labelled.csv'],['merge_labels.py','LABELLING_GUIDE'],
+ ['collect_pool.py','labelling_pool.csv'],['collect_pool.py','entities.py'],
+ ['collect_pool.py','news_source.py'],['collect_pool.py','fetch_comments()'],
+ ['news_source.py','entities.py'],
+ ['app.py','sentiment_model.py'],['app.py','script.js'],['script.js','nepal map'],
+ ['labelling_pool.csv','labelled.csv']
+];
+const W=470,H=440;
+document.getElementById('legend').innerHTML = Object.entries(C).map(([k,v])=>
+ `<span style="display:flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:${v.c}"></span>${v.n}</span>`).join('');
+document.getElementById('stats').textContent = `${N.length} nodes · ${L.length} edges · ${Object.keys(C).length} communities`;
+
+const nodes=N.map(d=>({...d})), links=L.map(([s,t])=>({source:s,target:t}));
+const deg={}; L.forEach(([s,t])=>{deg[s]=(deg[s]||0)+1;deg[t]=(deg[t]||0)+1;});
+
+const svg=d3.select('#graph').append('svg')
+  .attr('viewBox',`0 0 ${W} ${H}`).attr('width','100%').style('display','block');
+const root=svg.append('g');
+svg.call(d3.zoom().scaleExtent([0.4,4]).on('zoom',e=>root.attr('transform',e.transform)));
+
+const link=root.append('g').selectAll('line').data(links).join('line')
+  .attr('stroke','#33323c').attr('stroke-width',0.7).attr('stroke-opacity',0.55);
+
+const node=root.append('g').selectAll('g').data(nodes).join('g').style('cursor','pointer');
+node.append('circle').attr('class','halo').attr('r',d=>d.s*0.55+6)
+  .attr('fill',d=>C[d.g].c).attr('opacity',0.13);
+node.append('circle').attr('r',d=>d.s*0.55).attr('fill',d=>C[d.g].c)
+  .attr('stroke','#0d0d0f').attr('stroke-width',1.4);
+node.append('text').text(d=>d.id).attr('x',d=>d.s*0.55+5).attr('y',3)
+  .attr('font-size',7.5).attr('fill','#8b8a93')
+  .attr('font-family','system-ui,sans-serif').style('pointer-events','none');
+
+nodes.forEach((d,i)=>{d.ph=i*0.7; d.sp=0.5+((i*37)%13)/26;});
+
+const sim=d3.forceSimulation(nodes)
+  .force('link',d3.forceLink(links).id(d=>d.id).distance(48).strength(0.5))
+  .force('charge',d3.forceManyBody().strength(-190))
+  .force('center',d3.forceCenter(W/2,H/2))
+  .force('collide',d3.forceCollide(d=>d.s*0.55+11))
+  .alphaDecay(0.02)
+  .on('tick',()=>{
+    link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+        .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    node.attr('transform',d=>`translate(${d.x},${d.y})`);
+  });
+
+let t=0, held=false;
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(!reduce){
+  d3.timer(()=>{
+    t+=0.006;
+    if(!held){
+      nodes.forEach(d=>{
+        d.vx += Math.cos(t*d.sp+d.ph)*0.055;
+        d.vy += Math.sin(t*d.sp*0.83+d.ph)*0.055;
+      });
+      sim.alpha(Math.max(sim.alpha(),0.055));
+    }
+    node.selectAll('.halo').attr('opacity',d=>0.10+0.07*Math.sin(t*2.2+d.ph));
+  });
+}
+
+node.call(d3.drag()
+  .on('start',(e,d)=>{held=true;if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+  .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;})
+  .on('end',(e,d)=>{held=false;if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
+
+node.on('click',(e,d)=>{
+  e.stopPropagation();
+  document.getElementById('pmeta').textContent=C[d.g].n;
+  document.getElementById('pname').textContent=d.id;
+  document.getElementById('pdesc').textContent=d.d;
+  const nb=L.filter(([s,t])=>s===d.id||t===d.id).map(([s,t])=>s===d.id?t:s);
+  document.getElementById('pconn').textContent=`${deg[d.id]||0} connections: ${nb.slice(0,4).join(', ')}${nb.length>4?'…':''}`;
+  const set=new Set([d.id,...nb]);
+  node.style('opacity',x=>set.has(x.id)?1:0.16);
+  link.attr('stroke-opacity',x=>x.source.id===d.id||x.target.id===d.id?0.95:0.06)
+      .attr('stroke',x=>x.source.id===d.id||x.target.id===d.id?C[d.g].c:'#33323c');
+});
+svg.on('click',()=>{node.style('opacity',1);
+  link.attr('stroke-opacity',0.55).attr('stroke','#33323c');});
+</script>

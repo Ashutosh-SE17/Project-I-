@@ -1,0 +1,327 @@
+{
+  "primary": {
+    "majority_baseline": {
+      "name": "Majority baseline",
+      "n": 854,
+      "accuracy": 0.5175644028103045,
+      "macro_f1": 0.3410493827160494,
+      "per_class": {
+        "negative": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 412
+        },
+        "positive": {
+          "precision": 0.5175644028103045,
+          "recall": 1.0,
+          "f1": 0.6820987654320988,
+          "support": 442
+        }
+      },
+      "per_script": {
+        "deva": {
+          "n": 322,
+          "accuracy": 0.4720496894409938,
+          "macro_f1": 0.3206751054852321
+        },
+        "latin": {
+          "n": 285,
+          "accuracy": 0.5614035087719298,
+          "macro_f1": 0.3595505617977528
+        },
+        "mixed": {
+          "n": 247,
+          "accuracy": 0.5263157894736842,
+          "macro_f1": 0.3448275862068966
+        }
+      }
+    },
+    "ml_only": {
+      "name": "ML only",
+      "n": 854,
+      "accuracy": 0.8220140515222483,
+      "macro_f1": 0.8220130753367557,
+      "per_class": {
+        "negative": {
+          "precision": 0.7954545454545454,
+          "recall": 0.8495145631067961,
+          "f1": 0.8215962441314554,
+          "support": 412
+        },
+        "positive": {
+          "precision": 0.8502415458937198,
+          "recall": 0.7963800904977375,
+          "f1": 0.822429906542056,
+          "support": 442
+        }
+      },
+      "per_script": {
+        "deva": {
+          "n": 322,
+          "accuracy": 0.7950310559006211,
+          "macro_f1": 0.7907608695652174
+        },
+        "latin": {
+          "n": 285,
+          "accuracy": 0.8421052631578947,
+          "macro_f1": 0.8400892756948168
+        },
+        "mixed": {
+          "n": 247,
+          "accuracy": 0.8340080971659919,
+          "macro_f1": 0.8333086431945748
+        }
+      }
+    },
+    "ml_entity": {
+      "name": "ML + entity layer",
+      "n": 806,
+      "accuracy": 0.7779156327543424,
+      "macro_f1": 0.7778578434316139,
+      "per_class": {
+        "negative": {
+          "precision": 0.7655860349127181,
+          "recall": 0.7831632653061225,
+          "f1": 0.7742749054224464,
+          "support": 392
+        },
+        "positive": {
+          "precision": 0.7901234567901234,
+          "recall": 0.7729468599033816,
+          "f1": 0.7814407814407814,
+          "support": 414
+        }
+      },
+      "per_script": {
+        "deva": {
+          "n": 311,
+          "accuracy": 0.7684887459807074,
+          "macro_f1": 0.7643939393939394
+        },
+        "latin": {
+          "n": 281,
+          "accuracy": 0.7829181494661922,
+          "macro_f1": 0.779692821798085
+        },
+        "mixed": {
+          "n": 214,
+          "accuracy": 0.7850467289719626,
+          "macro_f1": 0.7831527006784739
+        }
+      }
+    },
+    "lexicon_only": {
+      "name": "Lexicon only",
+      "n": 806,
+      "accuracy": 0.13027295285359802,
+      "macro_f1": 0.21978204845666383,
+      "per_class": {
+        "negative": {
+          "precision": 0.6101694915254238,
+          "recall": 0.09183673469387756,
+          "f1": 0.15964523281596452,
+          "support": 392
+        },
+        "positive": {
+          "precision": 0.8734177215189873,
+          "recall": 0.16666666666666666,
+          "f1": 0.2799188640973631,
+          "support": 414
+        }
+      },
+      "per_script": {
+        "deva": {
+          "n": 311,
+          "accuracy": 0.006430868167202572,
+          "macro_f1": 0.013422818791946308
+        },
+        "latin": {
+          "n": 281,
+          "accuracy": 0.23487544483985764,
+          "macro_f1": 0.35877839717077264
+        },
+        "mixed": {
+          "n": 214,
+          "accuracy": 0.17289719626168223,
+          "macro_f1": 0.2701350373764167
+        }
+      },
+      "neutral_coverage": {
+        "overall": 0.8287841191066998,
+        "per_script": {
+          "deva": 0.977491961414791,
+          "latin": 0.693950177935943,
+          "mixed": 0.7897196261682243
+        }
+      }
+    }
+  },
+  "matched_only_head_to_head": {
+    "majority_baseline": {
+      "name": "Majority baseline (matched-only)",
+      "n": 806,
+      "accuracy": 0.5136476426799007,
+      "macro_f1": 0.33934426229508197,
+      "per_class": {
+        "negative": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 392
+        },
+        "positive": {
+          "precision": 0.5136476426799007,
+          "recall": 1.0,
+          "f1": 0.6786885245901639,
+          "support": 414
+        }
+      },
+      "per_script": {
+        "deva": {
+          "n": 311,
+          "accuracy": 0.47266881028938906,
+          "macro_f1": 0.32096069868995636
+        },
+        "latin": {
+          "n": 281,
+          "accuracy": 0.5587188612099644,
+          "macro_f1": 0.3584474885844749
+        },
+        "mixed": {
+          "n": 214,
+          "accuracy": 0.514018691588785,
+          "macro_f1": 0.3395061728395062
+        }
+      }
+    },
+    "ml_only": {
+      "name": "ML only (matched-only)",
+      "n": 806,
+      "accuracy": 0.8200992555831266,
+      "macro_f1": 0.820098978657246,
+      "per_class": {
+        "negative": {
+          "precision": 0.7975903614457831,
+          "recall": 0.8443877551020408,
+          "f1": 0.8203221809169765,
+          "support": 392
+        },
+        "positive": {
+          "precision": 0.8439897698209718,
+          "recall": 0.7971014492753623,
+          "f1": 0.8198757763975155,
+          "support": 414
+        }
+      },
+      "per_script": {
+        "deva": {
+          "n": 311,
+          "accuracy": 0.7942122186495176,
+          "macro_f1": 0.7898116076708626
+        },
+        "latin": {
+          "n": 281,
+          "accuracy": 0.8398576512455516,
+          "macro_f1": 0.8380112988560229
+        },
+        "mixed": {
+          "n": 214,
+          "accuracy": 0.8317757009345794,
+          "macro_f1": 0.8310526315789473
+        }
+      }
+    },
+    "ml_entity": {
+      "name": "ML + entity layer",
+      "n": 806,
+      "accuracy": 0.7779156327543424,
+      "macro_f1": 0.7778578434316139,
+      "per_class": {
+        "negative": {
+          "precision": 0.7655860349127181,
+          "recall": 0.7831632653061225,
+          "f1": 0.7742749054224464,
+          "support": 392
+        },
+        "positive": {
+          "precision": 0.7901234567901234,
+          "recall": 0.7729468599033816,
+          "f1": 0.7814407814407814,
+          "support": 414
+        }
+      },
+      "per_script": {
+        "deva": {
+          "n": 311,
+          "accuracy": 0.7684887459807074,
+          "macro_f1": 0.7643939393939394
+        },
+        "latin": {
+          "n": 281,
+          "accuracy": 0.7829181494661922,
+          "macro_f1": 0.779692821798085
+        },
+        "mixed": {
+          "n": 214,
+          "accuracy": 0.7850467289719626,
+          "macro_f1": 0.7831527006784739
+        }
+      }
+    },
+    "lexicon_only": {
+      "name": "Lexicon only",
+      "n": 806,
+      "accuracy": 0.13027295285359802,
+      "macro_f1": 0.21978204845666383,
+      "per_class": {
+        "negative": {
+          "precision": 0.6101694915254238,
+          "recall": 0.09183673469387756,
+          "f1": 0.15964523281596452,
+          "support": 392
+        },
+        "positive": {
+          "precision": 0.8734177215189873,
+          "recall": 0.16666666666666666,
+          "f1": 0.2799188640973631,
+          "support": 414
+        }
+      },
+      "per_script": {
+        "deva": {
+          "n": 311,
+          "accuracy": 0.006430868167202572,
+          "macro_f1": 0.013422818791946308
+        },
+        "latin": {
+          "n": 281,
+          "accuracy": 0.23487544483985764,
+          "macro_f1": 0.35877839717077264
+        },
+        "mixed": {
+          "n": 214,
+          "accuracy": 0.17289719626168223,
+          "macro_f1": 0.2701350373764167
+        }
+      },
+      "neutral_coverage": {
+        "overall": 0.8287841191066998,
+        "per_script": {
+          "deva": 0.977491961414791,
+          "latin": 0.693950177935943,
+          "mixed": 0.7897196261682243
+        }
+      }
+    }
+  },
+  "metadata": {
+    "n_total": 854,
+    "n_candidate_matched": 806,
+    "n_candidate_unmatched": 48,
+    "folds": 5,
+    "random_state": 42,
+    "neutral_handling": "lexicon 'Neutral' predictions are scored as errors via sklearn's labels=['positive','negative'] restriction, not remapped by score sign",
+    "config3_tie_break": "when polarity * attribution == 0 (no candidate or rival mentioned), predicted class defaults to the majority class ('positive')"
+  }
+}
