@@ -43,6 +43,7 @@ CANDIDATES = {
         'scandals': ['vendor force', 'fatuwari', 'garbage', 'फोहोर',
                      'dharahara', 'bulldozer'],
         'party': 'rsp',
+        'constituency': 'Jhapa-5',
     },
     'kp oli': {
         'display': 'KP Oli',
@@ -54,6 +55,7 @@ CANDIDATES = {
         'scandals': ['lalita niwas', 'ललिता निवास', 'giribandhu', 'omni',
                      'yeti world', '70 crore', 'baluwatar'],
         'party': 'uml',
+        'constituency': 'Jhapa-5',
     },
     'gagan thapa': {
         'display': 'Gagan Thapa',
@@ -62,6 +64,7 @@ CANDIDATES = {
         'symbols': ['🌳', 'nc', 'congress', 'कांग्रेस', 'rukh', 'रुख'],
         'scandals': ['bakhra', 'बाख्रा', 'anudan', 'mcc'],
         'party': 'nc',
+        'constituency': 'Sarlahi-4',
     },
     'prachanda': {
         'display': 'Prachanda',
@@ -71,6 +74,7 @@ CANDIDATES = {
         'symbols': ['🔨', 'maoist', 'माओवादी', 'hathoda', 'हथौडा'],
         'scandals': ['cantonment', 'shibir', 'शिविर', 'ncell', 'lda'],
         'party': 'maoist',
+        'constituency': 'Eastern Rukum-1',
     },
     'harka sampang': {
         'display': 'Harka Sampang',
@@ -80,6 +84,7 @@ CANDIDATES = {
         'symbols': ['💧', 'water', 'pani', 'पानी'],
         'scandals': ['pastor', 'gai haney', 'kaku', 'काकु'],
         'party': 'independent',
+        'constituency': 'Sunsari-1',
     },
     'rabi lamichhane': {
         'display': 'Rabi Lamichhane',
@@ -96,8 +101,105 @@ CANDIDATES = {
                      'gorkha media', 'citizenship', 'नागरिकता', 'passport',
                      'राहदानी'],
         'party': 'rsp',
+        'constituency': 'Chitwan-2',
+    },
+    # -- validation-set opponents, added for the five-race backtest below --
+    # scandals intentionally left empty: not hand-curated yet, and an
+    # empty list is correct here, not a placeholder for a guess.
+    'mina kharel': {
+        'display': 'Mina Kharel',
+        'search': 'Mina Kharel',
+        # 'mina' alone is a common given name (same reasoning as 'rabi' /
+        # 'gagan' above) -- every alias below requires at least two name
+        # parts so it can't fire on an unrelated Mina.
+        'aliases': ['mina kharel', 'meena kharel', 'मीना खरेल',
+                    'mina kharel didi'],
+        'symbols': ['🌳', 'nc', 'congress', 'कांग्रेस', 'rukh', 'रुख'],
+        'scandals': [],
+        'party': 'nc',
+        'constituency': 'Chitwan-2',
+    },
+    'goma tamang': {
+        'display': 'Goma Tamang',
+        'search': 'Goma Tamang',
+        # 'goma' alone is a common given name -- same two-name-parts rule.
+        'aliases': ['goma tamang', 'गोमा तामाङ', 'goma tamang didi'],
+        'symbols': ['🔔', 'ghanti', 'घण्टी', 'jay ghanti', 'rsp', 'रास्वपा',
+                    'raswapa', 'rastriya swatantra', 'राष्ट्रिय स्वतन्त्र'],
+        'scandals': [],
+        'party': 'rsp',
+        'constituency': 'Sunsari-1',
+    },
+    'amresh kumar singh': {
+        'display': 'Amresh Kumar Singh',
+        'search': 'Amresh Kumar Singh',
+        # 'amresh' alone is a common given name -- same two-name-parts rule.
+        # 'singh' alone is excluded too: an extremely common surname on its
+        # own, not specific to this candidate.
+        'aliases': ['amresh kumar singh', 'amresh singh',
+                    'अमरेश कुमार सिंह', 'अमरेश सिंह'],
+        'symbols': ['🔔', 'ghanti', 'घण्टी', 'jay ghanti', 'rsp', 'रास्वपा',
+                    'raswapa', 'rastriya swatantra', 'राष्ट्रिय स्वतन्त्र'],
+        'scandals': [],
+        'party': 'rsp',
+        'constituency': 'Sarlahi-4',
+    },
+    'leelamani gautam': {
+        'display': 'Leelamani Gautam',
+        'search': 'Leelamani Gautam',
+        'aliases': ['leelamani gautam', 'leela mani gautam',
+                    'lila mani gautam', 'लीलामणि गौतम', 'लिला मणि गौतम'],
+        'symbols': ['☀️', '🌞', 'uml', 'एमाले', 'emale', 'surya', 'सूर्य'],
+        'scandals': [],
+        'party': 'uml',
+        'constituency': 'Eastern Rukum-1',
     },
 }
+
+# --------------------------------------------------------------------------
+# Real head-to-head results for the five constituencies above, used to
+# validate the model's win-probability output against actual outcomes.
+# `total_votes` is approximate: the sum of the two listed candidates only
+# -- other, minor candidates on the same ballot are not accounted for.
+# --------------------------------------------------------------------------
+
+RACES = [
+    {
+        'constituency': 'Jhapa-5',
+        'candidate_a': 'balen', 'votes_a': 68348,
+        'candidate_b': 'kp oli', 'votes_b': 18734,
+        'winner': 'balen',
+        'total_votes': 68348 + 18734,
+    },
+    {
+        'constituency': 'Chitwan-2',
+        'candidate_a': 'rabi lamichhane', 'votes_a': 54402,
+        'candidate_b': 'mina kharel', 'votes_b': 14564,
+        'winner': 'rabi lamichhane',
+        'total_votes': 54402 + 14564,
+    },
+    {
+        'constituency': 'Sunsari-1',
+        'candidate_a': 'harka sampang', 'votes_a': 35741,
+        'candidate_b': 'goma tamang', 'votes_b': 27249,
+        'winner': 'harka sampang',
+        'total_votes': 35741 + 27249,
+    },
+    {
+        'constituency': 'Sarlahi-4',
+        'candidate_a': 'amresh kumar singh', 'votes_a': 35688,
+        'candidate_b': 'gagan thapa', 'votes_b': 22838,
+        'winner': 'amresh kumar singh',
+        'total_votes': 35688 + 22838,
+    },
+    {
+        'constituency': 'Eastern Rukum-1',
+        'candidate_a': 'prachanda', 'votes_a': 10240,
+        'candidate_b': 'leelamani gautam', 'votes_b': 3462,
+        'winner': 'prachanda',
+        'total_votes': 10240 + 3462,
+    },
+]
 
 # --------------------------------------------------------------------------
 # Party-level terms

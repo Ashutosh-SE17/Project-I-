@@ -13,6 +13,12 @@ Builds the single de-duplicated pool that label_tool.py draws from.
     python collect_pool.py --news-only
 
 Output: labelling_pool.csv  (columns: text, candidate, script, source)
+Additive: whatever is already in labelling_pool.csv is loaded and merged
+in before deduplication, so a plain `python collect_pool.py` (no --fetch)
+can never shrink it. --fetch results are also persisted to
+fetched_cache.csv independently of the pool file, so a rebuild can't lose
+a previous fetch even if the pool file itself was reverted or deleted.
+
 --news-only output: headline_pool.csv  (columns: text, candidate, outlet,
 published, weight, script, channel). Additive: existing rows are kept and
 merged with freshly fetched ones, deduped on normalised text.
@@ -48,6 +54,38 @@ def from_csv(path: Path) -> pd.DataFrame:
     return out
 
 
+def load_pool(path: Path) -> pd.DataFrame:
+    """Load an existing pool/cache CSV as-is. Used both for the existing
+    labelling_pool.csv (so a rebuild can never drop rows that are only on
+    disk) and for fetched_cache.csv (so a fetch survives independently of
+    whatever happens to the pool file)."""
+    if not path.exists():
+        return pd.DataFrame()
+    df = pd.read_csv(path)
+    if 'text' not in df.columns:
+        return pd.DataFrame()
+    return df
+
+
+def append_to_fetched_cache(new_rows: pd.DataFrame, cache_path: Path) -> pd.DataFrame:
+    """Persist freshly-fetched comments to fetched_cache.csv, independent of
+    labelling_pool.csv. This is what stops a fetch from being lost the next
+    time the pool is rebuilt without --fetch."""
+    existing = load_pool(cache_path)
+    if new_rows.empty:
+        return existing
+
+    parts = [d for d in (existing, new_rows) if not d.empty]
+    combined = pd.concat(parts, ignore_index=True)
+    combined['text'] = combined['text'].astype(str).str.strip()
+    combined['_norm'] = combined['text'].apply(pp.clean)
+    combined = combined[combined['_norm'].str.strip().astype(bool)]
+    combined = combined.drop_duplicates(subset=['_norm']).drop(columns=['_norm'])
+    combined = combined.reset_index(drop=True)
+    combined.to_csv(cache_path, index=False)
+    return combined
+
+
 def from_cache(path: Path) -> pd.DataFrame:
     if not path.exists():
         return pd.DataFrame()
@@ -81,36 +119,77 @@ EXTRA_QUERIES = {
         'बालेन शाह',
         'Balen Shah RSP',
         'Balen Shah bhasan',
+        'Jhapa 5 chunav',
+        'Balen Shah Jhapa',
     ],
     'kp oli': [
         'KP Oli interview',
         'केपी ओली',
         'KP Oli UML',
         'KP Oli bhasan',
+        'Jhapa 5 chunav',
+        'KP Oli Jhapa',
     ],
     'gagan thapa': [
         'Gagan Thapa interview',
         'गगन थापा',
         'Gagan Thapa Congress',
         'Gagan Thapa bhasan',
+        'Sarlahi 4 chunav',
+        'Gagan Thapa Sarlahi',
     ],
     'prachanda': [
         'Prachanda interview',
         'प्रचण्ड',
         'Prachanda Maoist Centre',
         'Prachanda bhasan',
+        'Rukum Purba chunav',
+        'Prachanda Rukum',
     ],
     'harka sampang': [
         'Harka Sampang interview',
         'हर्क सम्पाङ',
         'Harka Sampang Dharan mayor',
         'Harka Sampang bhasan',
+        'Sunsari 1 chunav',
+        'Harka Sampang Sunsari',
     ],
     'rabi lamichhane': [
         'Rabi Lamichhane interview',
         'रवि लामिछाने',
         'Rabi Lamichhane RSP',
         'Rabi Lamichhane bhasan',
+        'Chitwan 2 chunav',
+        'Rabi Lamichhane Chitwan',
+    ],
+    'mina kharel': [
+        'Mina Kharel Chitwan',
+        'मीना खरेल',
+        'Chitwan 2 chunav',
+        'Mina Kharel Rabi Lamichhane',
+        'Chitwan 2 nirbachan',
+    ],
+    'goma tamang': [
+        'Goma Tamang Sunsari',
+        'गोमा तामाङ',
+        'Sunsari 1 chunav',
+        'Goma Tamang RSP',
+        'Sunsari 1 nirbachan',
+    ],
+    'amresh kumar singh': [
+        'Amresh Kumar Singh Sarlahi',
+        'अमरेश कुमार सिंह',
+        'Sarlahi 4 chunav',
+        'Amresh Singh Gagan Thapa',
+        'Sarlahi 4 nirbachan',
+        'Amresh Kumar Singh RSP',
+    ],
+    'leelamani gautam': [
+        'Leelamani Gautam Rukum',
+        'लीलामणि गौतम',
+        'Rukum Purba chunav',
+        'Leelamani Gautam UML',
+        'Rukum 1 nirbachan',
     ],
 }
 
@@ -280,12 +359,22 @@ def main():
     if args.news_only:
         return run_news_only(BASE / args.headline_out)
 
+    out_path = BASE / args.out
+    fetched_cache_path = BASE / 'fetched_cache.csv'
+
+    existing_pool = load_pool(out_path)
+    before_pool = len(existing_pool)
+
+    if args.fetch:
+        fresh = fetch_fresh(args.per_candidate, args.only)
+        append_to_fetched_cache(fresh, fetched_cache_path)
+
     parts = [
+        existing_pool,
         from_csv(BASE / 'election_data.csv'),
         from_cache(BASE / 'cache.json'),
+        load_pool(fetched_cache_path),
     ]
-    if args.fetch:
-        parts.append(fetch_fresh(args.per_candidate, args.only))
     if args.news:
         parts.append(fetch_news())
 
@@ -304,17 +393,28 @@ def main():
     df = df[df['text'].str.len() >= args.min_chars]
 
     # de-duplicate on NORMALISED text, so "KP Oli chor!!!" and
-    # "kp oli chor" are not labelled twice
+    # "kp oli chor" are not labelled twice. existing_pool is concatenated
+    # first, so drop_duplicates (keeps first) always favours rows already
+    # on disk over anything freshly re-derived.
     df['_norm'] = df['text'].apply(pp.clean)
     df = df[df['_norm'].str.strip().astype(bool)]
     df = df.drop_duplicates(subset=['_norm']).drop(columns=['_norm'])
 
     df['script'] = df['text'].apply(pp.script_of)
     df = df.reset_index(drop=True)
+    after_pool = len(df)
 
-    df.to_csv(args.out, index=False)
+    if after_pool < before_pool:
+        print(f'\n  WARNING: merged result ({after_pool}) is smaller than '
+              f'the existing {out_path.name} ({before_pool}). Aborting '
+              f'without writing -- investigate before re-running.')
+        return 1
 
-    print(f'\n{before} raw -> {len(df)} unique comments -> {args.out}\n')
+    df.to_csv(out_path, index=False)
+
+    delta = after_pool - before_pool
+    print(f'\npool: {before_pool} -> {after_pool} ({delta:+d} new)')
+    print(f'({before} raw rows merged from all sources -> {after_pool} unique -> {out_path.name})\n')
     print('by candidate:')
     print(df['candidate'].value_counts().to_string())
     print('\nby script:')
