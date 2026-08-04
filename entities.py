@@ -276,9 +276,14 @@ def resolve(candidate: str) -> str:
     return c  # unknown candidate: attribution falls back to the prior
 
 
-def attribution(text: str, candidate: str) -> dict:
+def attribution(text: str, candidate: str,
+                party_hit_weight: float = PARTY_HIT_WEIGHT) -> dict:
     """
     Decide who a comment is aimed at.
+
+    `party_hit_weight` defaults to the module constant so every existing
+    caller is unaffected; it's exposed as a parameter so validation code
+    can sweep it without monkeypatching the module global.
 
     Returns a dict with:
         attribution  -- float in [-1, +1]
@@ -314,9 +319,9 @@ def attribution(text: str, candidate: str) -> dict:
         if party == own_party:
             # ambiguous between our candidate and their party colleagues,
             # so the evidence is divided among them
-            own_hits += PARTY_HIT_WEIGHT / max(1, len(members))
+            own_hits += party_hit_weight / max(1, len(members))
         else:
-            rival_hits += PARTY_HIT_WEIGHT
+            rival_hits += party_hit_weight
 
     # --- attribution ---
     # Fractional hits mean the evidence was party-level only, which is

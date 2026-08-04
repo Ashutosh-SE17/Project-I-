@@ -1,0 +1,350 @@
+{
+  "default_party_hit_weight": 0.4,
+  "comment_selection": [
+    {
+      "constituency": "Jhapa-5",
+      "n_relevant": 2775,
+      "tag_breakdown": {
+        "kp oli": 1635,
+        "balen": 978,
+        "rabi lamichhane": 44,
+        "prachanda": 31,
+        "amresh kumar singh": 24,
+        "gagan thapa": 20,
+        "harka sampang": 15,
+        "mina kharel": 15,
+        "leelamani gautam": 11,
+        "goma tamang": 2
+      }
+    },
+    {
+      "constituency": "Chitwan-2",
+      "n_relevant": 1344,
+      "tag_breakdown": {
+        "mina kharel": 760,
+        "rabi lamichhane": 557,
+        "balen": 10,
+        "kp oli": 6,
+        "gagan thapa": 5,
+        "goma tamang": 2,
+        "prachanda": 2,
+        "harka sampang": 1,
+        "amresh kumar singh": 1
+      }
+    },
+    {
+      "constituency": "Sunsari-1",
+      "n_relevant": 1402,
+      "tag_breakdown": {
+        "harka sampang": 917,
+        "goma tamang": 452,
+        "balen": 10,
+        "kp oli": 7,
+        "prachanda": 6,
+        "rabi lamichhane": 3,
+        "mina kharel": 3,
+        "amresh kumar singh": 2,
+        "gagan thapa": 1,
+        "leelamani gautam": 1
+      }
+    },
+    {
+      "constituency": "Sarlahi-4",
+      "n_relevant": 1138,
+      "tag_breakdown": {
+        "gagan thapa": 558,
+        "amresh kumar singh": 533,
+        "mina kharel": 19,
+        "kp oli": 13,
+        "leelamani gautam": 10,
+        "balen": 2,
+        "rabi lamichhane": 2,
+        "prachanda": 1
+      }
+    },
+    {
+      "constituency": "Eastern Rukum-1",
+      "n_relevant": 1044,
+      "tag_breakdown": {
+        "prachanda": 630,
+        "leelamani gautam": 386,
+        "kp oli": 19,
+        "gagan thapa": 3,
+        "balen": 2,
+        "rabi lamichhane": 2,
+        "harka sampang": 1,
+        "mina kharel": 1
+      }
+    }
+  ],
+  "volume_baseline": {
+    "races": {
+      "Jhapa-5": {
+        "predicted_winner": "kp oli",
+        "correct": false,
+        "n_a": 978,
+        "n_b": 1635
+      },
+      "Chitwan-2": {
+        "predicted_winner": "mina kharel",
+        "correct": false,
+        "n_a": 557,
+        "n_b": 760
+      },
+      "Sunsari-1": {
+        "predicted_winner": "harka sampang",
+        "correct": true,
+        "n_a": 917,
+        "n_b": 452
+      },
+      "Sarlahi-4": {
+        "predicted_winner": "gagan thapa",
+        "correct": false,
+        "n_a": 533,
+        "n_b": 558
+      },
+      "Eastern Rukum-1": {
+        "predicted_winner": "prachanda",
+        "correct": true,
+        "n_a": 630,
+        "n_b": 386
+      }
+    },
+    "total_correct": 2
+  },
+  "party_weight_sweep": [
+    {
+      "party_hit_weight": 0.0,
+      "races": {
+        "Jhapa-5": {
+          "predicted_winner": "balen",
+          "correct": true
+        },
+        "Chitwan-2": {
+          "predicted_winner": "rabi lamichhane",
+          "correct": true
+        },
+        "Sunsari-1": {
+          "predicted_winner": "harka sampang",
+          "correct": true
+        },
+        "Sarlahi-4": {
+          "predicted_winner": "gagan thapa",
+          "correct": false
+        },
+        "Eastern Rukum-1": {
+          "predicted_winner": "leelamani gautam",
+          "correct": false
+        }
+      },
+      "total_correct": 3
+    },
+    {
+      "party_hit_weight": 0.2,
+      "races": {
+        "Jhapa-5": {
+          "predicted_winner": "balen",
+          "correct": true
+        },
+        "Chitwan-2": {
+          "predicted_winner": "rabi lamichhane",
+          "correct": true
+        },
+        "Sunsari-1": {
+          "predicted_winner": "harka sampang",
+          "correct": true
+        },
+        "Sarlahi-4": {
+          "predicted_winner": "gagan thapa",
+          "correct": false
+        },
+        "Eastern Rukum-1": {
+          "predicted_winner": "leelamani gautam",
+          "correct": false
+        }
+      },
+      "total_correct": 3
+    },
+    {
+      "party_hit_weight": 0.4,
+      "races": {
+        "Jhapa-5": {
+          "predicted_winner": "balen",
+          "correct": true
+        },
+        "Chitwan-2": {
+          "predicted_winner": "rabi lamichhane",
+          "correct": true
+        },
+        "Sunsari-1": {
+          "predicted_winner": "harka sampang",
+          "correct": true
+        },
+        "Sarlahi-4": {
+          "predicted_winner": "gagan thapa",
+          "correct": false
+        },
+        "Eastern Rukum-1": {
+          "predicted_winner": "leelamani gautam",
+          "correct": false
+        }
+      },
+      "total_correct": 3
+    },
+    {
+      "party_hit_weight": 0.6,
+      "races": {
+        "Jhapa-5": {
+          "predicted_winner": "balen",
+          "correct": true
+        },
+        "Chitwan-2": {
+          "predicted_winner": "rabi lamichhane",
+          "correct": true
+        },
+        "Sunsari-1": {
+          "predicted_winner": "harka sampang",
+          "correct": true
+        },
+        "Sarlahi-4": {
+          "predicted_winner": "gagan thapa",
+          "correct": false
+        },
+        "Eastern Rukum-1": {
+          "predicted_winner": "leelamani gautam",
+          "correct": false
+        }
+      },
+      "total_correct": 3
+    },
+    {
+      "party_hit_weight": 0.8,
+      "races": {
+        "Jhapa-5": {
+          "predicted_winner": "balen",
+          "correct": true
+        },
+        "Chitwan-2": {
+          "predicted_winner": "rabi lamichhane",
+          "correct": true
+        },
+        "Sunsari-1": {
+          "predicted_winner": "harka sampang",
+          "correct": true
+        },
+        "Sarlahi-4": {
+          "predicted_winner": "gagan thapa",
+          "correct": false
+        },
+        "Eastern Rukum-1": {
+          "predicted_winner": "leelamani gautam",
+          "correct": false
+        }
+      },
+      "total_correct": 3
+    },
+    {
+      "party_hit_weight": 1.0,
+      "races": {
+        "Jhapa-5": {
+          "predicted_winner": "balen",
+          "correct": true
+        },
+        "Chitwan-2": {
+          "predicted_winner": "rabi lamichhane",
+          "correct": true
+        },
+        "Sunsari-1": {
+          "predicted_winner": "harka sampang",
+          "correct": true
+        },
+        "Sarlahi-4": {
+          "predicted_winner": "gagan thapa",
+          "correct": false
+        },
+        "Eastern Rukum-1": {
+          "predicted_winner": "leelamani gautam",
+          "correct": false
+        }
+      },
+      "total_correct": 3
+    }
+  ],
+  "detailed": [
+    {
+      "constituency": "Jhapa-5",
+      "candidate_a": "balen",
+      "candidate_b": "kp oli",
+      "n_comments": 2775,
+      "mean_score_a": 0.058,
+      "mean_score_b": -0.2489,
+      "predicted_share_a": 58.48,
+      "predicted_share_b": 41.52,
+      "actual_share_a": 78.49,
+      "actual_share_b": 21.51,
+      "predicted_winner": "balen",
+      "actual_winner": "balen",
+      "correct": true
+    },
+    {
+      "constituency": "Chitwan-2",
+      "candidate_a": "rabi lamichhane",
+      "candidate_b": "mina kharel",
+      "n_comments": 1344,
+      "mean_score_a": 0.0842,
+      "mean_score_b": -0.0792,
+      "predicted_share_a": 54.08,
+      "predicted_share_b": 45.92,
+      "actual_share_a": 78.88,
+      "actual_share_b": 21.12,
+      "predicted_winner": "rabi lamichhane",
+      "actual_winner": "rabi lamichhane",
+      "correct": true
+    },
+    {
+      "constituency": "Sunsari-1",
+      "candidate_a": "harka sampang",
+      "candidate_b": "goma tamang",
+      "n_comments": 1402,
+      "mean_score_a": 0.2165,
+      "mean_score_b": -0.0721,
+      "predicted_share_a": 56.73,
+      "predicted_share_b": 43.27,
+      "actual_share_a": 56.74,
+      "actual_share_b": 43.26,
+      "predicted_winner": "harka sampang",
+      "actual_winner": "harka sampang",
+      "correct": true
+    },
+    {
+      "constituency": "Sarlahi-4",
+      "candidate_a": "amresh kumar singh",
+      "candidate_b": "gagan thapa",
+      "n_comments": 1138,
+      "mean_score_a": -0.0378,
+      "mean_score_b": 0.0186,
+      "predicted_share_a": 48.58,
+      "predicted_share_b": 51.42,
+      "actual_share_a": 60.98,
+      "actual_share_b": 39.02,
+      "predicted_winner": "gagan thapa",
+      "actual_winner": "amresh kumar singh",
+      "correct": false
+    },
+    {
+      "constituency": "Eastern Rukum-1",
+      "candidate_a": "prachanda",
+      "candidate_b": "leelamani gautam",
+      "n_comments": 1044,
+      "mean_score_a": -0.1185,
+      "mean_score_b": -0.0576,
+      "predicted_share_a": 48.33,
+      "predicted_share_b": 51.67,
+      "actual_share_a": 74.73,
+      "actual_share_b": 25.27,
+      "predicted_winner": "leelamani gautam",
+      "actual_winner": "prachanda",
+      "correct": false
+    }
+  ]
+}

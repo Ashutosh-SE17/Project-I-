@@ -127,16 +127,27 @@ class ElectionAnalyzer:
         return pol, labels, proba
 
     def score_frame(self, df: pd.DataFrame, candidate: str,
-                    channel: str = 'comment') -> pd.DataFrame:
-        """Attach polarity, attribution and final score to every item."""
+                    channel: str = 'comment',
+                    party_hit_weight: float = None) -> pd.DataFrame:
+        """Attach polarity, attribution and final score to every item.
+
+        `party_hit_weight` defaults to None, which resolves to the live
+        `entities.PARTY_HIT_WEIGHT` -- so every existing caller (app.py,
+        analyze_candidate, score_news) is unaffected. It's exposed here so
+        validation code can sweep the constant without touching the
+        module global.
+        """
         pol, labels, _ = self.polarity(df['text'].tolist(), channel=channel)
         df = df.copy()
         df['polarity'] = np.round(pol, 4)
         df['sentiment_label'] = [str(l).capitalize() for l in labels]
 
+        if party_hit_weight is None:
+            party_hit_weight = ent.PARTY_HIT_WEIGHT
+
         attr, scand = [], []
         for text in df['text']:
-            info = ent.attribution(text, candidate)
+            info = ent.attribution(text, candidate, party_hit_weight=party_hit_weight)
             attr.append(info['attribution'])
             scand.append(info['scandal'])
         df['attribution'] = attr
