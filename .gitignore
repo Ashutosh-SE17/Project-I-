@@ -42,3 +42,5 @@ __pycache__/
 *.jpeg
 *.jpg
 *.png
+
+*.pdf

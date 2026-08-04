@@ -9,7 +9,13 @@ Builds the single de-duplicated pool that label_tool.py draws from.
     # merge, then top up from YouTube across all five candidates
     python collect_pool.py --fetch --per-candidate 300
 
+    # headlines only, into their own file -- never touches labelling_pool.csv
+    python collect_pool.py --news-only
+
 Output: labelling_pool.csv  (columns: text, candidate, script, source)
+--news-only output: headline_pool.csv  (columns: text, candidate, outlet,
+published, weight, script, channel). Additive: existing rows are kept and
+merged with freshly fetched ones, deduped on normalised text.
 
 Why a separate step: your comments currently live in two files with two
 different shapes, one of them holding a single candidate. Labelling from
@@ -178,6 +184,79 @@ def fetch_news() -> pd.DataFrame:
     return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
 
 
+HEADLINE_COLUMNS = ['text', 'candidate', 'outlet', 'published', 'weight',
+                    'script', 'channel']
+
+
+def fetch_all_headlines() -> pd.DataFrame:
+    """Fetch headlines for every registered candidate, with the full
+    metadata (outlet, published, weight) that the standalone headline pool
+    keeps -- this never touches labelling_pool.csv."""
+    import entities as ent
+    from news_source import NewsCollector
+
+    nc = NewsCollector(verbose=False)
+    frames = []
+    for key, cfg in ent.CANDIDATES.items():
+        print(f'  headlines for {cfg["display"]}...', end=' ', flush=True)
+        try:
+            d = nc.collect(key)
+            if d.empty:
+                print('0')
+                continue
+            d = d.copy()
+            d['candidate'] = key
+            d['channel'] = 'news'
+            frames.append(d[HEADLINE_COLUMNS])
+            print(f'{len(d)}')
+        except Exception as exc:
+            print(f'failed ({type(exc).__name__})')
+    return (pd.concat(frames, ignore_index=True) if frames
+            else pd.DataFrame(columns=HEADLINE_COLUMNS))
+
+
+def run_news_only(out_path: Path) -> int:
+    """Additive headline collection. Never reads or writes labelling_pool.csv.
+
+    Loads whatever headline_pool.csv already has, fetches fresh headlines
+    for all candidates, dedupes on normalised text, and refuses to write if
+    the merged result would be smaller than what's already on disk -- that
+    would mean something went wrong upstream (e.g. RSS feeds down), not a
+    real shrink.
+    """
+    print('Fetching headlines for all candidates...\n')
+    new_df = fetch_all_headlines()
+
+    if out_path.exists():
+        existing = pd.read_csv(out_path)
+    else:
+        existing = pd.DataFrame(columns=HEADLINE_COLUMNS)
+    before = len(existing)
+
+    parts = [d for d in (existing, new_df) if not d.empty]
+    combined = pd.concat(parts, ignore_index=True) if parts else existing
+    combined['text'] = combined['text'].astype(str).str.strip()
+    combined['_norm'] = combined['text'].apply(pp.clean)
+    combined = combined[combined['_norm'].str.strip().astype(bool)]
+    combined = combined.drop_duplicates(subset=['_norm']).drop(columns=['_norm'])
+    combined = combined.reset_index(drop=True)
+    after = len(combined)
+
+    if after < before:
+        print(f'\n  WARNING: merged result ({after}) is smaller than the '
+              f'existing {out_path.name} ({before}). Aborting without '
+              f'writing -- investigate before re-running.')
+        return 1
+
+    combined.to_csv(out_path, index=False)
+
+    print(f'\n{before} existing -> {len(new_df)} fetched -> {after} unique '
+          f'-> {out_path.name}\n')
+    print('by candidate:')
+    print(combined['candidate'].value_counts().to_string())
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', default='labelling_pool.csv')
@@ -186,11 +265,20 @@ def main():
     ap.add_argument('--news', action='store_true',
                     help='also build a headline pool (labelled separately '
                          'as channel=news)')
+    ap.add_argument('--news-only', action='store_true',
+                    help='fetch headlines for all candidates into '
+                         'headline_pool.csv only -- never touches '
+                         'labelling_pool.csv')
+    ap.add_argument('--headline-out', default='headline_pool.csv',
+                    help='output path for --news-only')
     ap.add_argument('--per-candidate', type=int, default=1000)
     ap.add_argument('--min-chars', type=int, default=8)
     ap.add_argument('--only', default=None,
                     help='fetch just this one candidate (e.g. --only balen)')
     args = ap.parse_args()
+
+    if args.news_only:
+        return run_news_only(BASE / args.headline_out)
 
     parts = [
         from_csv(BASE / 'election_data.csv'),
@@ -238,6 +326,9 @@ def main():
         print(f'\n  Pool is {len(df)}. Run with --fetch to top up before '
               f'labelling, or label what you have and add more later.')
 
+    return 0
+
 
 if __name__ == '__main__':
-    main()
+    import sys
+    sys.exit(main())

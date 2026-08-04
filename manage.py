@@ -6,6 +6,7 @@ One entry point for the whole project. Run from the project root.
 
     python manage.py doctor     check the environment is set up correctly
     python manage.py pool       build the labelling pool (add --news for headlines)
+    python manage.py news-pool  fetch headlines into headline_pool.csv only
     python manage.py label      start labelling
     python manage.py audit      measure your own annotation consistency
     python manage.py train      train the classifier
@@ -111,6 +112,10 @@ def pool(extra):
     return run('collect_pool.py', extra)
 
 
+def news_pool(extra):
+    return run('collect_pool.py', ['--news-only'] + extra)
+
+
 def label(extra):
     args = extra[:]
     if '--data' not in args:
@@ -181,8 +186,9 @@ def analyze(extra):
 
 
 COMMANDS = {
-    'doctor': doctor, 'pool': pool, 'label': label, 'audit': audit,
-    'train': train, 'maps': maps, 'serve': serve, 'analyze': analyze,
+    'doctor': doctor, 'pool': pool, 'news-pool': news_pool, 'label': label,
+    'audit': audit, 'train': train, 'maps': maps, 'serve': serve,
+    'analyze': analyze,
 }
 
 
