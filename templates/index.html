@@ -51,13 +51,30 @@
             <div class="meter-bg">
                 <div id="meterFill" class="meter-fill">0%</div>
             </div>
-           
+            <p id="ciText" class="ci-text"></p>
         </div>
 
         <div class="charts-grid">
             <div class="chart-card">
                 <h3>Sentiment Distribution</h3>
                 <canvas id="pieChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Model Performance</h3>
+                <div id="modelMetrics" class="stat-list"></div>
+            </div>
+            <div class="chart-card">
+                <h3>Script Breakdown</h3>
+                <table id="scriptTable" class="mini-table">
+                    <thead>
+                        <tr>
+                            <th>Script</th>
+                            <th>Count</th>
+                            <th>Mean Score</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
             </div>
         </div>
 
@@ -74,6 +91,21 @@
             </table>
         </div>
     </main>
+
+    <section class="party-card">
+        <h2>Party-Level Sentiment</h2>
+        <p class="party-note">Mean sentiment across all comments mentioning each party's symbols/terms or its registered candidates -- see validate_parties.py.</p>
+        <table id="partyTable" class="mini-table">
+            <thead>
+                <tr>
+                    <th>Party</th>
+                    <th>Comments</th>
+                    <th>Mean Sentiment</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
 </div>
 
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>

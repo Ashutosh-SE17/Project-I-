@@ -1,5 +1,8 @@
 # app.py
 
+import json
+from pathlib import Path
+
 from flask import Flask, render_template, request, jsonify
 
 from sentiment_model import ElectionAnalyzer
@@ -9,6 +12,8 @@ from sentiment_model import ElectionAnalyzer
 app = Flask(__name__)
 
 analyzer = ElectionAnalyzer()
+
+PARTY_VALIDATION_PATH = Path(__file__).resolve().parent / 'party_validation.json'
 
 
 
@@ -49,6 +54,22 @@ def analyze():
     except Exception as e:
 
         return jsonify({"error": str(e)}), 500
+
+
+
+@app.route('/api/parties')
+
+def parties():
+
+    if not PARTY_VALIDATION_PATH.exists():
+
+        return jsonify({"error": "party_validation.json not found -- run validate_parties.py first"}), 404
+
+    with open(PARTY_VALIDATION_PATH, encoding='utf-8') as f:
+
+        data = json.load(f)
+
+    return jsonify(data)
 
 
 
