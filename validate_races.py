@@ -46,6 +46,14 @@ OUT_PATH = BASE / 'race_validation.json'
 PARTY_WEIGHT_SWEEP = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 DEFAULT_PARTY_WEIGHT = ent.PARTY_HIT_WEIGHT   # what the live app uses today
 
+# entities.CONTEXT_PRIOR (0.70) assumes a comment came from THIS
+# candidate's own search/fetch -- true for the single-candidate app flow,
+# false here, where each race scores one SHARED pool for both candidates.
+# Left at the live default, an unnamed comment nudges both candidates
+# equally positive instead of contributing nothing, which is what the
+# Sarlahi-4 diagnostic showed compressing every race toward 50/50.
+CONTEXT_PRIOR_OVERRIDE = 0.0
+
 
 # --------------------------------------------------------------------------
 # Comment selection
@@ -60,13 +68,26 @@ def build_mention_masks(pool: pd.DataFrame, keys) -> dict:
 
 
 def relevant_comments(pool: pd.DataFrame, key_a: str, key_b: str,
-                      mention_masks: dict) -> pd.DataFrame:
+                      mention_masks: dict, race_queries: list = None) -> pd.DataFrame:
     """Comments relevant to a race: tagged with either candidate, OR
-    mentioning either candidate's aliases regardless of tag. One combined
-    set, scored separately per candidate -- the attribution engine (not
-    this filter) is what decides who a given comment counts for."""
+    mentioning either candidate's aliases regardless of tag, OR sourced
+    from one of the race's shared constituency queries regardless of tag.
+
+    That third clause matters because `source` records which search FOUND
+    a comment, not who it's about. Several races reuse the exact same
+    query string for both candidates (e.g. 'Rukum Purba chunav' for both
+    prachanda and leelamani) -- pool-wide dedup keeps only the first-fetched
+    candidate's tag, so the loser of that dedup can end up with ~0 comments
+    from a query that actually ran fine. Matching on source recovers those
+    comments into the relevant set regardless of which tag they carry; the
+    attribution engine (not this filter) still decides who each one is
+    actually about.
+    """
     tag_mask = pool['candidate'].isin([key_a, key_b])
     mask = tag_mask | mention_masks[key_a] | mention_masks[key_b]
+    if race_queries:
+        source_tags = {f'yt:{q}' for q in race_queries}
+        mask = mask | pool['source'].isin(source_tags)
     return pool[mask].drop_duplicates(subset='text').reset_index(drop=True)
 
 
@@ -87,9 +108,12 @@ def shares(mean_a: float, mean_b: float) -> tuple:
 
 
 def score_race(analyzer: ElectionAnalyzer, relevant: pd.DataFrame,
-              key_a: str, key_b: str, party_hit_weight: float) -> tuple:
-    scored_a = analyzer.score_frame(relevant, key_a, party_hit_weight=party_hit_weight)
-    scored_b = analyzer.score_frame(relevant, key_b, party_hit_weight=party_hit_weight)
+              key_a: str, key_b: str, party_hit_weight: float,
+              context_prior: float = CONTEXT_PRIOR_OVERRIDE) -> tuple:
+    scored_a = analyzer.score_frame(relevant, key_a, party_hit_weight=party_hit_weight,
+                                    context_prior=context_prior)
+    scored_b = analyzer.score_frame(relevant, key_b, party_hit_weight=party_hit_weight,
+                                    context_prior=context_prior)
     return float(scored_a['sentiment_score'].mean()), float(scored_b['sentiment_score'].mean())
 
 
@@ -217,6 +241,84 @@ def diagnose_sarlahi_4(analyzer: ElectionAnalyzer, relevant: pd.DataFrame) -> No
 
 
 # --------------------------------------------------------------------------
+# Diagnostic: party-term signal, ALL races x ALL parties
+#
+# The Sarlahi-4-only RSP check found zero comments where an RSP term
+# appeared with no candidate named -- i.e. the SHARED_PARTY_TERMS /
+# PARTY_HIT_WEIGHT mechanism never actually fired there. This generalizes
+# that check to every race and every party (rsp, uml, nc, maoist) to see
+# whether that's a property of Sarlahi-4 specifically or of the corpus as
+# a whole.
+# --------------------------------------------------------------------------
+
+def alias_named_any(text: str) -> bool:
+    """True if the text names ANY of the ten registered candidates by
+    their own alias -- not scoped to a particular race's two candidates,
+    since a party term could just as easily be overridden by naming a
+    candidate from a completely different race."""
+    padded = ent._norm(text)
+    return any(ent._count_hits(padded, cfg['aliases']) for cfg in ent.CANDIDATES.values())
+
+
+def party_term_hit(text: str, party: str) -> bool:
+    return bool(ent._count_hits(ent._norm(text), ent.SHARED_PARTY_TERMS[party]))
+
+
+def diagnose_party_signals(race_pools: dict) -> None:
+    parties = list(ent.SHARED_PARTY_TERMS.keys())
+
+    print('=' * 100)
+    print('DIAGNOSTIC: party-term signal across all races and all parties')
+    print('=' * 100)
+
+    grand_total = grand_named = grand_unnamed = 0
+    examples = []
+
+    for race in ent.RACES:
+        relevant = race_pools[race['constituency']]
+        named_mask = relevant['text'].apply(alias_named_any).values
+
+        print(f"\n{race['constituency']}  (n={len(relevant)})")
+        print(f"  {'party':10s} {'total':>8s} {'w/ name':>10s} {'no name':>10s}")
+        for party in parties:
+            hit_mask = relevant['text'].apply(lambda t: party_term_hit(t, party)).values
+            total = int(hit_mask.sum())
+            with_name = int((hit_mask & named_mask).sum())
+            without_name = int((hit_mask & ~named_mask).sum())
+            print(f'  {party:10s} {total:8d} {with_name:10d} {without_name:10d}')
+
+            grand_total += total
+            grand_named += with_name
+            grand_unnamed += without_name
+
+            if without_name:
+                idx = np.where(hit_mask & ~named_mask)[0]
+                for i in idx:
+                    examples.append({
+                        'constituency': race['constituency'],
+                        'party': party,
+                        'text': str(relevant['text'].iloc[i]),
+                    })
+
+    print('\n' + '-' * 100)
+    print(f'SUMMARY across all {len(ent.RACES)} races x {len(parties)} party sets')
+    print(f'  total party-term comments   {grand_total:6d}')
+    print(f'  with a candidate named      {grand_named:6d}')
+    print(f'  no candidate named          {grand_unnamed:6d}')
+
+    if examples:
+        shown = examples[:5]
+        print(f'\n  {len(shown)} example(s): party term present, no candidate named')
+        for ex in shown:
+            preview = ex['text'][:70].replace('\n', ' ')
+            print(f"    [{ex['constituency']:16s} {ex['party']:8s}] {preview}")
+    else:
+        print('\n  No examples -- "no candidate named" is zero in every race/party '
+              'combination. The zero result on Sarlahi-4/RSP holds everywhere.')
+    print()
+
+
+# --------------------------------------------------------------------------
 # Main
 # --------------------------------------------------------------------------
 
@@ -232,10 +334,14 @@ def main():
     mention_masks = build_mention_masks(pool, race_keys)
 
     race_pools = {race['constituency']: relevant_comments(
-                      pool, race['candidate_a'], race['candidate_b'], mention_masks)
+                      pool, race['candidate_a'], race['candidate_b'], mention_masks,
+                      race.get('race_queries'))
                   for race in ent.RACES}
 
     # ---- comment-selection sanity check ----
+    # tag_breakdown is still the raw (arbitrary-for-shared-queries) tag
+    # distribution -- kept for visibility into the collision itself, not
+    # used for the baseline below.
     selection = []
     for race in ent.RACES:
         relevant = race_pools[race['constituency']]
@@ -246,12 +352,18 @@ def main():
         })
 
     # ---- volume-only baseline (null hypothesis: no sentiment at all) ----
+    # Uses TEXT MENTIONS of each candidate's own aliases, not the tag
+    # column -- tags are arbitrary for comments pulled in via a shared
+    # constituency query (whichever candidate's fetch ran first "wins" the
+    # dedup and keeps the tag, regardless of who the comment is about).
     baseline_races = {}
     baseline_correct = 0
-    for race, sel in zip(ent.RACES, selection):
-        tags = sel['tag_breakdown']
-        n_a = tags.get(race['candidate_a'], 0)
-        n_b = tags.get(race['candidate_b'], 0)
+    for race in ent.RACES:
+        relevant = race_pools[race['constituency']]
+        n_a = int(relevant['text'].apply(
+            lambda t: NewsCollector._mentions(t, race['candidate_a'])).sum())
+        n_b = int(relevant['text'].apply(
+            lambda t: NewsCollector._mentions(t, race['candidate_b'])).sum())
         predicted = race['candidate_a'] if n_a >= n_b else race['candidate_b']
         correct = predicted == race['winner']
         baseline_correct += int(correct)
@@ -309,6 +421,7 @@ def main():
     print_sweep_table(sweep, baseline, constituencies)
     print_detail_table(detailed)
     diagnose_sarlahi_4(analyzer, race_pools['Sarlahi-4'])
+    diagnose_party_signals(race_pools)
 
     out = {
         'default_party_hit_weight': DEFAULT_PARTY_WEIGHT,

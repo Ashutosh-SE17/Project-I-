@@ -83,7 +83,10 @@ CANDIDATES = {
                     'harka raii', 'harka rai'],
         'symbols': ['💧', 'water', 'pani', 'पानी'],
         'scandals': ['pastor', 'gai haney', 'kaku', 'काकु'],
-        'party': 'independent',
+        # Ran for Shram Sanskriti Party, not as an independent -- confirmed
+        # by 11 pool comments naming 'श्रम संस्कृति (पार्टी)' directly
+        # alongside him (e.g. "...जय हर्क बाद जय श्रम संस्कृति पाटि...").
+        'party': 'shram sanskriti',
         'constituency': 'Sunsari-1',
     },
     'rabi lamichhane': {
@@ -163,6 +166,14 @@ CANDIDATES = {
 # -- other, minor candidates on the same ballot are not accounted for.
 # --------------------------------------------------------------------------
 
+# `race_queries` -- the constituency-name-only YouTube search queries
+# (from collect_pool.EXTRA_QUERIES) used for this race, e.g. 'Jhapa 5
+# chunav'. These are the queries run for BOTH candidates in a race, so a
+# comment they surface can end up tagged to whichever candidate happened
+# to be fetched first (pool-wide dedup keeps the first-seen row). Matching
+# on the `source` column recovers those comments regardless of which
+# candidate's tag they landed under.
+
 RACES = [
     {
         'constituency': 'Jhapa-5',
@@ -170,6 +181,7 @@ RACES = [
         'candidate_b': 'kp oli', 'votes_b': 18734,
         'winner': 'balen',
         'total_votes': 68348 + 18734,
+        'race_queries': ['Jhapa 5 chunav'],
     },
     {
         'constituency': 'Chitwan-2',
@@ -177,6 +189,7 @@ RACES = [
         'candidate_b': 'mina kharel', 'votes_b': 14564,
         'winner': 'rabi lamichhane',
         'total_votes': 54402 + 14564,
+        'race_queries': ['Chitwan 2 chunav', 'Chitwan 2 nirbachan'],
     },
     {
         'constituency': 'Sunsari-1',
@@ -184,6 +197,7 @@ RACES = [
         'candidate_b': 'goma tamang', 'votes_b': 27249,
         'winner': 'harka sampang',
         'total_votes': 35741 + 27249,
+        'race_queries': ['Sunsari 1 chunav', 'Sunsari 1 nirbachan'],
     },
     {
         'constituency': 'Sarlahi-4',
@@ -191,6 +205,7 @@ RACES = [
         'candidate_b': 'gagan thapa', 'votes_b': 22838,
         'winner': 'amresh kumar singh',
         'total_votes': 35688 + 22838,
+        'race_queries': ['Sarlahi 4 chunav', 'Sarlahi 4 nirbachan'],
     },
     {
         'constituency': 'Eastern Rukum-1',
@@ -198,6 +213,7 @@ RACES = [
         'candidate_b': 'leelamani gautam', 'votes_b': 3462,
         'winner': 'prachanda',
         'total_votes': 10240 + 3462,
+        'race_queries': ['Rukum Purba chunav', 'Rukum 1 nirbachan'],
     },
 ]
 
@@ -219,6 +235,13 @@ SHARED_PARTY_TERMS = {
     'uml': ['☀️', '🌞', 'uml', 'एमाले', 'emale', 'surya', 'सूर्य'],
     'nc': ['🌳', 'nc', 'congress', 'कांग्रेस', 'rukh', 'रुख'],
     'maoist': ['🔨', 'maoist', 'माओवादी', 'hathoda', 'हथौडा'],
+    # Only the Devanagari multi-word phrase is included. The bare word
+    # 'shram'/'श्रम' ("labor/effort") is common Nepali vocabulary unrelated
+    # to the party -- confirmed by false hits in the pool ("vishram" =
+    # rest, "shram gareko" = made an effort). No romanized 'shram
+    # sanskriti' spelling appears anywhere in the pool, so it isn't added
+    # here either; only what's actually evidenced in the data is included.
+    'shram sanskriti': ['श्रम संस्कृति'],
 }
 
 PARTY_HIT_WEIGHT = 0.4   # a party mention is weaker evidence than a name
@@ -277,13 +300,18 @@ def resolve(candidate: str) -> str:
 
 
 def attribution(text: str, candidate: str,
-                party_hit_weight: float = PARTY_HIT_WEIGHT) -> dict:
+                party_hit_weight: float = PARTY_HIT_WEIGHT,
+                context_prior: float = CONTEXT_PRIOR) -> dict:
     """
     Decide who a comment is aimed at.
 
-    `party_hit_weight` defaults to the module constant so every existing
-    caller is unaffected; it's exposed as a parameter so validation code
-    can sweep it without monkeypatching the module global.
+    `party_hit_weight` and `context_prior` both default to their module
+    constants so every existing caller is unaffected; they're exposed as
+    parameters so validation code can override them without monkeypatching
+    the module globals. `context_prior` in particular assumes the comment
+    came from THIS candidate's own search/fetch -- true for the
+    single-candidate app flow, false when scoring a shared multi-candidate
+    pool (e.g. head-to-head validation), where it should be passed as 0.0.
 
     Returns a dict with:
         attribution  -- float in [-1, +1]
@@ -328,14 +356,14 @@ def attribution(text: str, candidate: str,
     # ambiguous between party colleagues. Confidence is capped accordingly
     # rather than treated as a positive identification.
     if own_hits and not rival_hits:
-        attr = 1.0 if own_hits >= 1.0 else min(1.0, own_hits + CONTEXT_PRIOR * (1 - own_hits))
+        attr = 1.0 if own_hits >= 1.0 else min(1.0, own_hits + context_prior * (1 - own_hits))
     elif rival_hits and not own_hits:
         attr = -1.0 if rival_hits >= 1.0 else -min(1.0, rival_hits + 0.2)
     elif own_hits and rival_hits:
         # both named: lean toward whoever dominates, but heavily damped
         attr = AMBIGUOUS_DAMP * (own_hits - rival_hits) / (own_hits + rival_hits)
     else:
-        attr = CONTEXT_PRIOR
+        attr = context_prior
 
     # --- scandal term (independent of attribution) ---
     scandal = 0.0

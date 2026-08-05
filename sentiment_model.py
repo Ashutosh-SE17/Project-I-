@@ -128,14 +128,18 @@ class ElectionAnalyzer:
 
     def score_frame(self, df: pd.DataFrame, candidate: str,
                     channel: str = 'comment',
-                    party_hit_weight: float = None) -> pd.DataFrame:
+                    party_hit_weight: float = None,
+                    context_prior: float = None) -> pd.DataFrame:
         """Attach polarity, attribution and final score to every item.
 
-        `party_hit_weight` defaults to None, which resolves to the live
-        `entities.PARTY_HIT_WEIGHT` -- so every existing caller (app.py,
-        analyze_candidate, score_news) is unaffected. It's exposed here so
-        validation code can sweep the constant without touching the
-        module global.
+        `party_hit_weight` and `context_prior` both default to None, which
+        resolves to the live `entities.PARTY_HIT_WEIGHT` /
+        `entities.CONTEXT_PRIOR` -- so every existing caller (app.py,
+        analyze_candidate, score_news) is unaffected. They're exposed here
+        so validation code can override them without touching the module
+        globals -- context_prior in particular assumes the frame came from
+        THIS candidate's own fetch, which doesn't hold for a shared
+        multi-candidate pool.
         """
         pol, labels, _ = self.polarity(df['text'].tolist(), channel=channel)
         df = df.copy()
@@ -144,10 +148,13 @@ class ElectionAnalyzer:
 
         if party_hit_weight is None:
             party_hit_weight = ent.PARTY_HIT_WEIGHT
+        if context_prior is None:
+            context_prior = ent.CONTEXT_PRIOR
 
         attr, scand = [], []
         for text in df['text']:
-            info = ent.attribution(text, candidate, party_hit_weight=party_hit_weight)
+            info = ent.attribution(text, candidate, party_hit_weight=party_hit_weight,
+                                   context_prior=context_prior)
             attr.append(info['attribution'])
             scand.append(info['scandal'])
         df['attribution'] = attr

@@ -1,0 +1,327 @@
+{
+  "parties": [
+    "rsp",
+    "uml",
+    "nc",
+    "maoist",
+    "shram sanskriti"
+  ],
+  "national_party_scores": {
+    "rsp": {
+      "n": 1478,
+      "mean_polarity": 0.5494,
+      "ci_low": 0.5261,
+      "ci_high": 0.5733
+    },
+    "uml": {
+      "n": 548,
+      "mean_polarity": -0.4175,
+      "ci_low": -0.4581,
+      "ci_high": -0.373
+    },
+    "nc": {
+      "n": 493,
+      "mean_polarity": 0.1996,
+      "ci_low": 0.1489,
+      "ci_high": 0.2496
+    },
+    "maoist": {
+      "n": 238,
+      "mean_polarity": -0.1811,
+      "ci_low": -0.2468,
+      "ci_high": -0.1091
+    },
+    "shram sanskriti": {
+      "n": 543,
+      "mean_polarity": 0.5515,
+      "ci_low": 0.5118,
+      "ci_high": 0.5911
+    }
+  },
+  "race_local_party_scores": {
+    "Jhapa-5": {
+      "uml": {
+        "n": 504,
+        "mean_polarity": -0.445,
+        "ci_low": -0.4887,
+        "ci_high": -0.3966
+      },
+      "rsp": {
+        "n": 926,
+        "mean_polarity": 0.5181,
+        "ci_low": 0.4846,
+        "ci_high": 0.5502
+      }
+    },
+    "Chitwan-2": {
+      "nc": {
+        "n": 94,
+        "mean_polarity": 0.1924,
+        "ci_low": 0.0828,
+        "ci_high": 0.3088
+      },
+      "rsp": {
+        "n": 464,
+        "mean_polarity": 0.6789,
+        "ci_low": 0.6427,
+        "ci_high": 0.7145
+      }
+    },
+    "Sunsari-1": {
+      "shram sanskriti": {
+        "n": 542,
+        "mean_polarity": 0.5531,
+        "ci_low": 0.5128,
+        "ci_high": 0.5929
+      },
+      "rsp": {
+        "n": 67,
+        "mean_polarity": 0.3025,
+        "ci_low": 0.1811,
+        "ci_high": 0.4215
+      }
+    },
+    "Sarlahi-4": {
+      "nc": {
+        "n": 395,
+        "mean_polarity": 0.2244,
+        "ci_low": 0.1693,
+        "ci_high": 0.2767
+      },
+      "rsp": {
+        "n": 187,
+        "mean_polarity": 0.5013,
+        "ci_low": 0.4312,
+        "ci_high": 0.564
+      }
+    },
+    "Eastern Rukum-1": {
+      "uml": {
+        "n": 45,
+        "mean_polarity": -0.2842,
+        "ci_low": -0.4123,
+        "ci_high": -0.1405
+      },
+      "maoist": {
+        "n": 227,
+        "mean_polarity": -0.1901,
+        "ci_low": -0.261,
+        "ci_high": -0.1171
+      }
+    }
+  },
+  "races": [
+    {
+      "constituency": "Jhapa-5",
+      "candidate_a": "balen",
+      "party_a": "rsp",
+      "candidate_b": "kp oli",
+      "party_b": "uml",
+      "actual_party": "rsp",
+      "national_score_a": {
+        "n": 1478,
+        "mean_polarity": 0.5494,
+        "ci_low": 0.5261,
+        "ci_high": 0.5733
+      },
+      "national_score_b": {
+        "n": 548,
+        "mean_polarity": -0.4175,
+        "ci_low": -0.4581,
+        "ci_high": -0.373
+      },
+      "national_scoreable": true,
+      "national_predicted": "rsp",
+      "national_correct": true,
+      "race_local_score_a": {
+        "n": 926,
+        "mean_polarity": 0.5181,
+        "ci_low": 0.4846,
+        "ci_high": 0.5502
+      },
+      "race_local_score_b": {
+        "n": 504,
+        "mean_polarity": -0.445,
+        "ci_low": -0.4887,
+        "ci_high": -0.3966
+      },
+      "race_local_scoreable": true,
+      "race_local_predicted": "rsp",
+      "race_local_correct": true
+    },
+    {
+      "constituency": "Chitwan-2",
+      "candidate_a": "rabi lamichhane",
+      "party_a": "rsp",
+      "candidate_b": "mina kharel",
+      "party_b": "nc",
+      "actual_party": "rsp",
+      "national_score_a": {
+        "n": 1478,
+        "mean_polarity": 0.5494,
+        "ci_low": 0.5261,
+        "ci_high": 0.5733
+      },
+      "national_score_b": {
+        "n": 493,
+        "mean_polarity": 0.1996,
+        "ci_low": 0.1489,
+        "ci_high": 0.2496
+      },
+      "national_scoreable": true,
+      "national_predicted": "rsp",
+      "national_correct": true,
+      "race_local_score_a": {
+        "n": 464,
+        "mean_polarity": 0.6789,
+        "ci_low": 0.6427,
+        "ci_high": 0.7145
+      },
+      "race_local_score_b": {
+        "n": 94,
+        "mean_polarity": 0.1924,
+        "ci_low": 0.0828,
+        "ci_high": 0.3088
+      },
+      "race_local_scoreable": true,
+      "race_local_predicted": "rsp",
+      "race_local_correct": true
+    },
+    {
+      "constituency": "Sunsari-1",
+      "candidate_a": "harka sampang",
+      "party_a": "shram sanskriti",
+      "candidate_b": "goma tamang",
+      "party_b": "rsp",
+      "actual_party": "shram sanskriti",
+      "national_score_a": {
+        "n": 543,
+        "mean_polarity": 0.5515,
+        "ci_low": 0.5118,
+        "ci_high": 0.5911
+      },
+      "national_score_b": {
+        "n": 1478,
+        "mean_polarity": 0.5494,
+        "ci_low": 0.5261,
+        "ci_high": 0.5733
+      },
+      "national_scoreable": true,
+      "national_predicted": "shram sanskriti",
+      "national_correct": true,
+      "race_local_score_a": {
+        "n": 542,
+        "mean_polarity": 0.5531,
+        "ci_low": 0.5128,
+        "ci_high": 0.5929
+      },
+      "race_local_score_b": {
+        "n": 67,
+        "mean_polarity": 0.3025,
+        "ci_low": 0.1811,
+        "ci_high": 0.4215
+      },
+      "race_local_scoreable": true,
+      "race_local_predicted": "shram sanskriti",
+      "race_local_correct": true
+    },
+    {
+      "constituency": "Sarlahi-4",
+      "candidate_a": "amresh kumar singh",
+      "party_a": "rsp",
+      "candidate_b": "gagan thapa",
+      "party_b": "nc",
+      "actual_party": "rsp",
+      "national_score_a": {
+        "n": 1478,
+        "mean_polarity": 0.5494,
+        "ci_low": 0.5261,
+        "ci_high": 0.5733
+      },
+      "national_score_b": {
+        "n": 493,
+        "mean_polarity": 0.1996,
+        "ci_low": 0.1489,
+        "ci_high": 0.2496
+      },
+      "national_scoreable": true,
+      "national_predicted": "rsp",
+      "national_correct": true,
+      "race_local_score_a": {
+        "n": 187,
+        "mean_polarity": 0.5013,
+        "ci_low": 0.4312,
+        "ci_high": 0.564
+      },
+      "race_local_score_b": {
+        "n": 395,
+        "mean_polarity": 0.2244,
+        "ci_low": 0.1693,
+        "ci_high": 0.2767
+      },
+      "race_local_scoreable": true,
+      "race_local_predicted": "rsp",
+      "race_local_correct": true
+    },
+    {
+      "constituency": "Eastern Rukum-1",
+      "candidate_a": "prachanda",
+      "party_a": "maoist",
+      "candidate_b": "leelamani gautam",
+      "party_b": "uml",
+      "actual_party": "maoist",
+      "national_score_a": {
+        "n": 238,
+        "mean_polarity": -0.1811,
+        "ci_low": -0.2468,
+        "ci_high": -0.1091
+      },
+      "national_score_b": {
+        "n": 548,
+        "mean_polarity": -0.4175,
+        "ci_low": -0.4581,
+        "ci_high": -0.373
+      },
+      "national_scoreable": true,
+      "national_predicted": "maoist",
+      "national_correct": true,
+      "race_local_score_a": {
+        "n": 227,
+        "mean_polarity": -0.1901,
+        "ci_low": -0.261,
+        "ci_high": -0.1171
+      },
+      "race_local_score_b": {
+        "n": 45,
+        "mean_polarity": -0.2842,
+        "ci_low": -0.4123,
+        "ci_high": -0.1405
+      },
+      "race_local_scoreable": true,
+      "race_local_predicted": "maoist",
+      "race_local_correct": true
+    }
+  ],
+  "totals": {
+    "sentiment_national": {
+      "correct": 5,
+      "scoreable": 5
+    },
+    "sentiment_race_local": {
+      "correct": 5,
+      "scoreable": 5
+    },
+    "volume_baseline_national": {
+      "correct": 3,
+      "scoreable": 5
+    },
+    "volume_baseline_race_local": {
+      "correct": 4,
+      "scoreable": 5
+    },
+    "always_predict_rsp": {
+      "correct": 3,
+      "total": 5
+    }
+  }
+}
