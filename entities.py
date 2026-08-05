@@ -50,8 +50,10 @@ CANDIDATES = {
         'search': 'KP Oli',
         'aliases': ['kp oli', 'kp', 'oli', 'ओली', 'केपी', 'केपी ओली',
                     'khadga prasad', 'kepi', 'kp baje', 'oli baje'],
-        'symbols': ['☀️', '🌞', 'uml', 'एमाले', 'emale', 'lauro', 'लौरो',
-                    'surya'],
+        # Generic UML terms (uml/surya/एमाले/☀️...) live in SHARED_PARTY_TERMS
+        # only -- NOT duplicated here. 'lauro'/'लौरो' is a personal nickname
+        # (cane), not a party symbol, so it stays.
+        'symbols': ['lauro', 'लौरो'],
         'scandals': ['lalita niwas', 'ललिता निवास', 'giribandhu', 'omni',
                      'yeti world', '70 crore', 'baluwatar'],
         'party': 'uml',
@@ -61,7 +63,9 @@ CANDIDATES = {
         'display': 'Gagan Thapa',
         'search': 'Gagan Thapa',
         'aliases': ['gagan', 'gagan thapa', 'गगन', 'गगन थापा', 'gagan dai'],
-        'symbols': ['🌳', 'nc', 'congress', 'कांग्रेस', 'rukh', 'रुख'],
+        # Generic NC terms live in SHARED_PARTY_TERMS only -- no personal
+        # symbol of his own beyond that.
+        'symbols': [],
         'scandals': ['bakhra', 'बाख्रा', 'anudan', 'mcc'],
         'party': 'nc',
         'constituency': 'Sarlahi-4',
@@ -71,7 +75,9 @@ CANDIDATES = {
         'search': 'Prachanda',
         'aliases': ['prachanda', 'प्रचण्ड', 'dahal', 'दाहाल', 'pushpa kamal',
                     'pk dahal', 'prachand'],
-        'symbols': ['🔨', 'maoist', 'माओवादी', 'hathoda', 'हथौडा'],
+        # Generic Maoist terms live in SHARED_PARTY_TERMS only -- no
+        # personal symbol of his own beyond that.
+        'symbols': [],
         'scandals': ['cantonment', 'shibir', 'शिविर', 'ncell', 'lda'],
         'party': 'maoist',
         'constituency': 'Eastern Rukum-1',
@@ -117,7 +123,9 @@ CANDIDATES = {
         # parts so it can't fire on an unrelated Mina.
         'aliases': ['mina kharel', 'meena kharel', 'मीना खरेल',
                     'mina kharel didi'],
-        'symbols': ['🌳', 'nc', 'congress', 'कांग्रेस', 'rukh', 'रुख'],
+        # Generic NC terms live in SHARED_PARTY_TERMS only -- see the note
+        # there on why duplicating them here double-counts a rival hit.
+        'symbols': [],
         'scandals': [],
         'party': 'nc',
         'constituency': 'Chitwan-2',
@@ -127,8 +135,8 @@ CANDIDATES = {
         'search': 'Goma Tamang',
         # 'goma' alone is a common given name -- same two-name-parts rule.
         'aliases': ['goma tamang', 'गोमा तामाङ', 'goma tamang didi'],
-        'symbols': ['🔔', 'ghanti', 'घण्टी', 'jay ghanti', 'rsp', 'रास्वपा',
-                    'raswapa', 'rastriya swatantra', 'राष्ट्रिय स्वतन्त्र'],
+        # Generic RSP terms live in SHARED_PARTY_TERMS only.
+        'symbols': [],
         'scandals': [],
         'party': 'rsp',
         'constituency': 'Sunsari-1',
@@ -141,8 +149,8 @@ CANDIDATES = {
         # own, not specific to this candidate.
         'aliases': ['amresh kumar singh', 'amresh singh',
                     'अमरेश कुमार सिंह', 'अमरेश सिंह'],
-        'symbols': ['🔔', 'ghanti', 'घण्टी', 'jay ghanti', 'rsp', 'रास्वपा',
-                    'raswapa', 'rastriya swatantra', 'राष्ट्रिय स्वतन्त्र'],
+        # Generic RSP terms live in SHARED_PARTY_TERMS only.
+        'symbols': [],
         'scandals': [],
         'party': 'rsp',
         'constituency': 'Sarlahi-4',
@@ -152,7 +160,8 @@ CANDIDATES = {
         'search': 'Leelamani Gautam',
         'aliases': ['leelamani gautam', 'leela mani gautam',
                     'lila mani gautam', 'लीलामणि गौतम', 'लिला मणि गौतम'],
-        'symbols': ['☀️', '🌞', 'uml', 'एमाले', 'emale', 'surya', 'सूर्य'],
+        # Generic UML terms live in SHARED_PARTY_TERMS only.
+        'symbols': [],
         'scandals': [],
         'party': 'uml',
         'constituency': 'Eastern Rukum-1',
@@ -227,12 +236,28 @@ RACES = [
 #
 # A party term counts as a WEAK signal for any candidate in that party --
 # it narrows the field without naming an individual.
+#
+# IMPORTANT: these terms must NOT also appear in any individual candidate's
+# own 'symbols' list. attribution()'s rival-scan loop sums aliases+symbols
+# per OTHER candidate, so the same generic party term duplicated into two
+# same-party candidates' symbols gets counted TWICE -- once per candidate,
+# as if two individuals were named, when the text really names neither.
+# (This is exactly what happened with 'ghanti' being baked into both goma
+# tamang's and amresh kumar singh's symbols -- a two-member RSP field
+# turned one generic word into rival_hits=2.0 against balen.) Personal
+# symbols (a nickname, an office title) are fine; a copy of the party's
+# own term list is not -- SHARED_PARTY_TERMS below is the only place that
+# should live.
 # --------------------------------------------------------------------------
 
 SHARED_PARTY_TERMS = {
     'rsp': ['🔔', 'ghanti', 'घण्टी', 'jay ghanti', 'rsp', 'रास्वपा',
             'raswapa', 'rastriya swatantra', 'राष्ट्रिय स्वतन्त्र'],
-    'uml': ['☀️', '🌞', 'uml', 'एमाले', 'emale', 'surya', 'सूर्य'],
+    # 'umale' / 'enaile' are common romanized colloquial references to UML
+    # ("umale" = UML+ley, "enaile" = a romanized एमाले variant) that don't
+    # match the existing 'emale'/'uml' spellings.
+    'uml': ['☀️', '🌞', 'uml', 'एमाले', 'emale', 'surya', 'सूर्य',
+            'umale', 'enaile'],
     'nc': ['🌳', 'nc', 'congress', 'कांग्रेस', 'rukh', 'रुख'],
     'maoist': ['🔨', 'maoist', 'माओवादी', 'hathoda', 'हथौडा'],
     # Only the Devanagari multi-word phrase is included. The bare word
@@ -334,17 +359,24 @@ def attribution(text: str, candidate: str,
         if not rival_scandal_hit and _count_hits(t, rcfg['scandals']):
             rival_scandal_hit = True
 
-    # --- party-level terms: weak evidence, and only when no individual
-    #     from that party has already been named ---
+    # --- party-level terms: weak evidence ---
+    # OWN party: skipped once an individual from that party is named --
+    # the direct name is already stronger evidence, so the generic party
+    # tag adds nothing on top and staying ambiguous here is fine.
+    # RIVAL party: always credited, named or not. A comment can both
+    # name a specific rival AND separately invoke their party ("KP Oli
+    # chor, jay UML") -- that party-level rhetoric is real evidence
+    # against us and shouldn't be dropped just because someone from that
+    # party happened to be named elsewhere in the same text.
     own_party = own_cfg.get('party') if own_cfg else None
     for party, terms in SHARED_PARTY_TERMS.items():
         if not _count_hits(t, terms):
             continue
         members = [k for k, c in CANDIDATES.items() if c.get('party') == party]
-        named = any(_count_hits(t, CANDIDATES[m]['aliases']) for m in members)
-        if named:
-            continue        # an individual was named; the party tag adds nothing
         if party == own_party:
+            named = any(_count_hits(t, CANDIDATES[m]['aliases']) for m in members)
+            if named:
+                continue     # an individual was named; the party tag adds nothing
             # ambiguous between our candidate and their party colleagues,
             # so the evidence is divided among them
             own_hits += party_hit_weight / max(1, len(members))
