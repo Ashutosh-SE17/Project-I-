@@ -42,6 +42,7 @@ import entities as ent
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / 'models' / 'sentiment_clf.pkl'
 CACHE_PATH = BASE_DIR / 'cache.json'
+LABELLED_PATH = BASE_DIR / 'labelled.csv'
 
 # --------------------------------------------------------------------------
 # Aggregation hyperparameters -- document these in your report
@@ -97,6 +98,18 @@ class ElectionAnalyzer:
             self.model_stats = bundle.get('stats', {})
         else:
             print(f'[warn] no model at {model_path}. Run train_sentiment.py first.')
+
+        # Maps preprocessing.clean(text) -> human label, so evidence rows
+        # can be marked "verified" against your own annotations. A missing
+        # or unreadable file just means nothing gets marked -- not fatal.
+        self.human_labels = {}
+        try:
+            labelled_df = pd.read_csv(LABELLED_PATH)
+            self.human_labels = dict(zip(
+                labelled_df['text'].astype(str).apply(pp.clean),
+                labelled_df['label'].astype(str)))
+        except Exception as exc:
+            print(f'[warn] no labelled.csv (or failed to load): {exc}')
 
     # ---------------------------------------------------------------- scoring
 
@@ -328,6 +341,32 @@ class ElectionAnalyzer:
 
     # --------------------------------------------------------------- public
 
+    def _sample_class(self, df: pd.DataFrame, label: str, rng: np.random.Generator,
+                      n: int = 25) -> list:
+        """Uniform random sample of up to `n` rows scored as `label` --
+        NOT ranked by score and NOT preferring human-labelled rows, so the
+        evidence reflects the real distribution instead of the most
+        extreme (or most reassuringly annotated) comments."""
+        grp = df[df['sentiment_label'] == label]
+        if grp.empty:
+            return []
+        idx = rng.choice(grp.index, size=min(n, len(grp)), replace=False)
+        rows = []
+        for _, r in df.loc[idx].iterrows():
+            human_label = self.human_labels.get(pp.clean(str(r['text'])))
+            agrees = (human_label.strip().lower() == str(r['sentiment_label']).strip().lower()
+                     if human_label is not None else None)
+            rows.append({
+                'text': r['text'],
+                'sentiment_label': r['sentiment_label'],
+                'sentiment_score': float(r['sentiment_score']),
+                'polarity': float(r['polarity']),
+                'attribution': float(r['attribution']),
+                'human_label': human_label,
+                'agrees': agrees,
+            })
+        return rows
+
     def score_news(self, candidate: str) -> pd.DataFrame:
         """Fetch and score headlines. Returns an empty frame on any failure."""
         try:
@@ -384,16 +423,24 @@ class ElectionAnalyzer:
         # ---- REPRESENTATIVE sample, not outcome-matched ----
         # The old version showed the 8 most positive comments when the
         # prediction was favourable and the 8 most negative when it was not,
-        # which made the evidence table circular. This draws a stratified
-        # random sample instead, so the table reflects the real distribution.
+        # which made the evidence table circular. This draws a uniform
+        # random sample per predicted class instead -- NOT ranked by score,
+        # and NOT preferring rows that happen to carry a human label -- so
+        # the evidence reflects the real distribution, not a cherry-picked
+        # or reassuringly-annotated one.
         rng = np.random.default_rng(42)
-        sample_rows = []
-        for label, grp in df.groupby('sentiment_label'):
-            share = len(grp) / len(df)
-            take = max(1, round(share * 10))
-            idx = rng.choice(grp.index, size=min(take, len(grp)), replace=False)
-            sample_rows.extend(idx)
-        sample = df.loc[sample_rows[:10]]
+        sample_positive = self._sample_class(df, 'Positive', rng, n=25)
+        sample_negative = self._sample_class(df, 'Negative', rng, n=25)
+
+        # legacy shape, still populated, for anything still reading it
+        sample_data = sample_positive[:5] + sample_negative[:5]
+
+        evidence_rows = sample_positive + sample_negative
+        labelled_rows = [r for r in evidence_rows if r['human_label'] is not None]
+        verified_count = {
+            'labelled': len(labelled_rows),
+            'agreeing': sum(1 for r in labelled_rows if r['agrees']),
+        }
 
         counts = df['sentiment_label'].value_counts().to_dict()
 
@@ -422,9 +469,11 @@ class ElectionAnalyzer:
                                   .agg(['count', 'mean']).round(3)
                                   .to_dict(orient='index'),
             'model_metrics': self.model_stats,
-            'sample_data': sample[['text', 'sentiment_label', 'sentiment_score',
-                                   'polarity', 'attribution']]
-                                 .to_dict(orient='records'),
-            'sampling_note': 'Stratified random sample, proportional to the '
-                             'predicted class distribution.',
+            'sample_data': sample_data,
+            'sample_positive': sample_positive,
+            'sample_negative': sample_negative,
+            'verified_count': verified_count,
+            'sampling_note': 'Uniform random sample per predicted class (up to 25 '
+                             'each), seeded for reproducibility. Not ranked by '
+                             'score, not preferring human-labelled rows.',
         }

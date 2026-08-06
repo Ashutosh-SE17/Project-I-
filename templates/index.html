@@ -27,17 +27,30 @@
   <div class="masthead__meta" id="corpusMeta">—</div>
 </header>
 
+<div class="band" id="band"></div>
+
 <main class="stage">
 
-  <!-- ── map ─────────────────────────────────────────────── -->
-  <section class="panel panel--map" aria-label="Constituency map">
-    <div class="panel__head">
-      <h2>Contested districts</h2>
-      <p class="panel__note">Shaded by winning party. Select one for detail.</p>
-    </div>
-    <div id="map" role="application" aria-label="Map of Nepal by district"></div>
-    <ul class="legend" id="legend"></ul>
-  </section>
+  <div class="column">
+    <!-- ── map ───────────────────────────────────────────── -->
+    <section class="panel panel--map" aria-label="Constituency map">
+      <div class="panel__head">
+        <h2>Contested districts</h2>
+        <p class="panel__note">Shaded by winning party. Select one for detail.</p>
+      </div>
+      <div id="map" role="application" aria-label="Map of Nepal by district"></div>
+      <ul class="legend" id="legend"></ul>
+    </section>
+
+    <!-- ── party standings ──────────────────────────────── -->
+    <section class="panel board">
+      <div class="panel__head">
+        <h2>Party standing</h2>
+        <p class="panel__note">Mean sentiment across all collected comments.</p>
+      </div>
+      <div id="standings"></div>
+    </section>
+  </div>
 
   <!-- ── detail rail ──────────────────────────────────────── -->
   <aside class="rail" id="rail" aria-live="polite">
@@ -111,8 +124,20 @@
         </section>
 
         <section class="block">
-          <h3>Sample comments</h3>
-          <ul class="quotes" id="quotes"></ul>
+          <h3>Comment evidence</h3>
+          <div class="verified" id="verifiedStrip" hidden></div>
+          <div class="evidence__tabs" role="tablist">
+            <button class="tab" id="tabPos" role="tab" aria-selected="true">Positive</button>
+            <button class="tab" id="tabNeg" role="tab" aria-selected="false">Negative</button>
+          </div>
+          <div class="evidence__list" id="quoteList" data-open="false"></div>
+          <div class="evidence__fade"></div>
+          <button class="more" id="moreBtn" aria-expanded="false" hidden>
+            <span>Show all</span>
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
         </section>
       </div>
     </div>
@@ -128,5 +153,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{{ url_for('static', filename='js/profiles.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/extras.js') }}"></script>
 </body>
 </html>

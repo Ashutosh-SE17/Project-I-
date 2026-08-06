@@ -327,9 +327,7 @@ function renderResult(d) {
     <tr><th>Majority baseline</th><td>${(m.baseline ?? 0).toFixed(3)}</td></tr>
     <tr><th>Labelled comments</th><td>${m.n ?? '—'}</td></tr>`;
 
-  $('quotes').innerHTML = (d.sample_data || []).slice(0, 6).map(r =>
-    `<li data-s="${r.sentiment_label}">${escapeHtml(String(r.text).slice(0, 150))}</li>`
-  ).join('');
+  renderEvidence(d);
 }
 
 function escapeHtml(s) {
