@@ -1,113 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Election Sentiment AI</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Electrametrics — Nepal election sentiment</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>🗳️ Election Sentiment & Probability AI</h1>
-        <p>Real-time analysis of political discourse using NLP</p>
-    </header>
+<header class="masthead">
+  <div class="masthead__mark" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M12 3v2M6.5 20h11a1 1 0 0 0 .95-1.32C17.6 16 17 13.6 17 11a5 5 0 0 0-10 0c0 2.6-.6 5-1.45 7.68A1 1 0 0 0 6.5 20Z"/>
+      <path d="M10.5 20a1.5 1.5 0 0 0 3 0"/>
+    </svg>
+  </div>
+  <div class="masthead__title">
+    <h1>Electrametrics</h1>
+    <p lang="ne">मत-सूचक</p>
+  </div>
+  <div class="masthead__meta" id="corpusMeta">—</div>
+</header>
 
-    <section class="map-card">
-        <h2>Nepal District Map</h2>
-        <iframe src="{{ url_for('static', filename='nepal_map_default.html') }}" title="Nepal District Map" class="map-frame"></iframe>
-    </section>
+<main class="stage">
 
-    <section class="controls">
-        <div class="input-group">
-            <label>Select Candidate</label>
-            <select id="candidateName">
-                <option value="Balen">Balen Shah (RSP Alliance)</option>
-                <option value="KP Oli">KP Oli (CPN-UML)</option>
-                <option value="Gagan Thapa">Gagan Thapa (NC)</option>
-                <option value="Prachanda">Prachanda (Maoist)</option>
-                <option value="Harka Sampang">Harka Sampang</option>
-            </select>
+  <!-- ── map ─────────────────────────────────────────────── -->
+  <section class="panel panel--map" aria-label="Constituency map">
+    <div class="panel__head">
+      <h2>Contested districts</h2>
+      <p class="panel__note">Shaded by winning party. Select one for detail.</p>
+    </div>
+    <div id="map" role="application" aria-label="Map of Nepal by district"></div>
+    <ul class="legend" id="legend"></ul>
+  </section>
+
+  <!-- ── detail rail ──────────────────────────────────────── -->
+  <aside class="rail" id="rail" aria-live="polite">
+
+    <div class="rail__empty" id="railEmpty">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.25">
+        <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/>
+      </svg>
+      <p>Select a shaded district to see the race.</p>
+      <p class="rail__hint">Five constituencies carry validated results.</p>
+    </div>
+
+    <div class="rail__body" id="railBody" hidden>
+      <div class="rail__eyebrow">
+        <span id="raceSeat">—</span>
+        <button class="rail__close" id="railClose" aria-label="Close detail">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="contest" id="contest"></div>
+
+      <div class="verdict" id="verdict"></div>
+
+      <section class="block">
+        <h3>Sentiment by party</h3>
+        <div class="bars" id="partyBars"></div>
+      </section>
+
+      <section class="block" id="analyseBlock">
+        <h3>Analyse a candidate</h3>
+        <div class="picker">
+          <select id="candidateName" aria-label="Candidate"></select>
+          <button class="btn" id="runBtn">
+            <span>Analyse</span>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h13M13 6l6 6-6 6"/>
+            </svg>
+          </button>
         </div>
+        <p class="loading" id="loading" hidden>Reading comments…</p>
+      </section>
 
-        <div class="input-group">
-            <label>Data Source</label>
-            <select id="dataSource">
-                <option value="youtube">YouTube Comments</option>
-            </select>
-        </div>
-        
-        <button onclick="runAnalysis()" id="analyzeBtn">Run Analysis</button>
-    </section>
+      <div id="result" hidden>
+        <section class="block">
+          <h3>Standing</h3>
+          <div class="meter">
+            <div class="meter__fill" id="meterFill"></div>
+          </div>
+          <div class="meter__row">
+            <span class="meter__val" id="meterVal">—</span>
+            <span class="meter__ci" id="ciText"></span>
+          </div>
+        </section>
 
-    <div id="loading" class="hidden">Connecting to YouTube API and analyzing 1,000+ comments...</div>
+        <section class="block">
+          <h3>Comment split</h3>
+          <div class="split" id="split"></div>
+        </section>
 
-    <main id="dashboard" class="hidden">
-        
-        <div class="win-meter-container">
-            <h2>Estimated Win Probability</h2>
-            <div class="meter-bg">
-                <div id="meterFill" class="meter-fill">0%</div>
-            </div>
-            <p id="ciText" class="ci-text"></p>
-        </div>
+        <section class="block">
+          <h3>By script</h3>
+          <table class="grid" id="scriptTable"></table>
+        </section>
 
-        <div class="charts-grid">
-            <div class="chart-card">
-                <h3>Sentiment Distribution</h3>
-                <canvas id="pieChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3>Model Performance</h3>
-                <div id="modelMetrics" class="stat-list"></div>
-            </div>
-            <div class="chart-card">
-                <h3>Script Breakdown</h3>
-                <table id="scriptTable" class="mini-table">
-                    <thead>
-                        <tr>
-                            <th>Script</th>
-                            <th>Count</th>
-                            <th>Mean Score</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+        <section class="block">
+          <h3>Model</h3>
+          <table class="grid" id="modelTable"></table>
+        </section>
 
-        <div class="data-preview">
-            <h3>Recent Mention Analysis</h3>
-            <table id="dataTable">
-                <thead>
-                    <tr>
-                        <th>Text Snippet</th>
-                        <th>Sentiment</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </main>
+        <section class="block">
+          <h3>Sample comments</h3>
+          <ul class="quotes" id="quotes"></ul>
+        </section>
+      </div>
+    </div>
+  </aside>
+</main>
 
-    <section class="party-card">
-        <h2>Party-Level Sentiment</h2>
-        <p class="party-note">Mean sentiment across all comments mentioning each party's symbols/terms or its registered candidates -- see validate_parties.py.</p>
-        <table id="partyTable" class="mini-table">
-            <thead>
-                <tr>
-                    <th>Party</th>
-                    <th>Comments</th>
-                    <th>Mean Sentiment</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </section>
-</div>
+<footer class="foot">
+  <p>Sentiment is measured from public YouTube comments, which are not a
+     representative sample of the electorate. Figures describe online
+     discussion, not vote intention.</p>
+</footer>
 
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ url_for('static', filename='js/profiles.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

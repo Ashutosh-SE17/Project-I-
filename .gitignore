@@ -42,5 +42,6 @@ __pycache__/
 *.jpeg
 *.jpg
 *.png
+!static/img/candidates/*.jpg
 
 *.pdf
