@@ -93,15 +93,24 @@ const map = L.map('map', {
 });
 
 let layer = null;
+let outline = null;
 
 fetch('/static/data/nepal_districts.geojson')
   .then(r => r.json())
   .then(geo => {
+    // under-layer: heavy stroke, no fill — its outer half shows past
+    // the national edge and reads as a country outline, cheaper than
+    // computing a real union of the district polygons
+    outline = L.geoJSON(geo, {
+      interactive: false,
+      style: { color: '#4A4655', weight: 4, fill: false, lineJoin: 'round' },
+    }).addTo(map);
+
     layer = L.geoJSON(geo, {
       style: styleFor,
       onEachFeature: bindFeature,
     }).addTo(map);
-    map.fitBounds(layer.getBounds(), { padding: [12, 12] });
+    map.fitBounds(layer.getBounds(), { padding: [14, 14] });
   })
   .catch(() => {
     $('map').innerHTML =
@@ -113,14 +122,14 @@ fetch('/static/data/nepal_districts.geojson')
 function styleFor(f) {
   const race = byDistrict[(f.properties.district || '').toLowerCase()];
   if (!race) {
-    return { fillColor: '#EFEEE8', color: '#E4E2DA', weight: 0.7, fillOpacity: 1 };
+    return { fillColor: '#EDEBE4', color: '#8B8598', weight: 1.1, fillOpacity: 1 };
   }
   const winner = race.a.votes >= race.b.votes ? race.a : race.b;
   return {
     fillColor: party(winner.party).colour,
     color: '#FFFFFF',
-    weight: 1.2,
-    fillOpacity: 0.82,
+    weight: 1.6,
+    fillOpacity: 0.9,
   };
 }
 
@@ -134,9 +143,12 @@ function bindFeature(f, lyr) {
   if (!race) return;
 
   lyr.on({
-    mouseover: e => e.target.setStyle({ weight: 2.4, fillOpacity: 0.95 }),
-    mouseout:  e => layer.resetStyle(e.target),
-    click:     () => showRace(race),
+    mouseover: e => {
+      e.target.setStyle({ weight: 2.6, fillOpacity: 1 });
+      e.target.bringToFront();
+    },
+    mouseout: e => layer.resetStyle(e.target),
+    click:    () => showRace(race),
   });
 }
 
@@ -144,7 +156,7 @@ function bindFeature(f, lyr) {
 
 $('legend').innerHTML = Object.entries(PARTY).map(([k, p]) =>
   `<li><i style="background:${p.colour}"></i>${p.label}</li>`).join('') +
-  `<li><i style="background:#EFEEE8;border:1px solid #E4E2DA"></i>No validated race</li>`;
+  `<li><i style="background:#EDEBE4;border:1px solid #8B8598"></i>No validated race</li>`;
 
 /* ── race detail ─────────────────────────────────────────── */
 
